@@ -69,7 +69,7 @@ class ReactionEvents(commands.Cog):
             if evaluator_id == author_id:
                 await self._remove_reaction(payload)
                 warning = await channel.send(
-                    f"{discord.Object(id=evaluator_id).mention} "
+                    f"<@{evaluator_id}> "
                     "❌ Você não pode avaliar a própria publicação.",
                     allowed_mentions=discord.AllowedMentions(
                         users=True,
