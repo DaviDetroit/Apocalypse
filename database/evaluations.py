@@ -17,31 +17,19 @@ async def process_evaluation(
         try:
             async with connection.cursor() as cursor:
 
-                # Garante que o autor exista
                 await cursor.execute(
                     """
-                    INSERT INTO users (discord_id)
-                    VALUES (%s)
-                    ON DUPLICATE KEY UPDATE discord_id = VALUES(discord_id)
+                    CALL ensure_evaluation_users(%s, %s)
                     """,
                     (
                         str(author_discord_id),
-                    ),
-                )
-
-                # Garante que o avaliador exista
-                await cursor.execute(
-                    """
-                    INSERT INTO users (discord_id)
-                    VALUES (%s)
-                    ON DUPLICATE KEY UPDATE discord_id = VALUES(discord_id)
-                    """,
-                    (
                         str(evaluator_discord_id),
                     ),
                 )
 
-                # Busca os IDs internos dos dois usuários
+                while await cursor.nextset():
+                    pass
+
                 await cursor.execute(
                     """
                     SELECT id, discord_id
@@ -62,7 +50,6 @@ async def process_evaluation(
                     for user_id, discord_id in rows
                 }
 
-                # Segurança: verifica se os usuários realmente existem
                 if author_discord_id not in users:
                     raise ValueError(
                         f"Autor não encontrado: {author_discord_id}"
@@ -76,7 +63,6 @@ async def process_evaluation(
                 author_id = users[author_discord_id]
                 evaluator_id = users[evaluator_discord_id]
 
-                # Verifica se o usuário já avaliou essa publicação
                 await cursor.execute(
                     """
                     SELECT 1
@@ -94,7 +80,6 @@ async def process_evaluation(
                 if await cursor.fetchone() is not None:
                     return False
 
-                # Cria a avaliação
                 await cursor.execute(
                     """
                     CALL create_evaluation(%s, %s, %s, %s)
@@ -107,13 +92,10 @@ async def process_evaluation(
                     ),
                 )
 
-                # IMPORTANTE:
-                # Procedures podem deixar resultados pendentes no cursor.
-                # Consumimos os resultados antes de executar a próxima query.
+                
                 while await cursor.nextset():
                     pass
 
-                # Adiciona os pontos ao autor
                 await cursor.execute(
                     """
                     CALL add_user_points(%s, %s)

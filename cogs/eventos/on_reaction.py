@@ -1,5 +1,5 @@
 import discord
-
+import asyncio
 from discord.ext import commands
 
 from database.evaluations import (
@@ -68,6 +68,19 @@ class ReactionEvents(commands.Cog):
 
             if evaluator_id == author_id:
                 await self._remove_reaction(payload)
+                warning = await channel.send(
+                    f"{discord.Object(id=evaluator_id).mention} "
+                    "❌ Você não pode avaliar a própria publicação.",
+                    allowed_mentions=discord.AllowedMentions(
+                        users=True,
+                    ),
+                )
+                await asyncio.sleep(5)
+
+                try:
+                    await warning.delete()
+                except discord.NotFound:
+                    pass
 
                 logger.info(
                     "Usuário %s tentou avaliar a própria publicação %s.",
