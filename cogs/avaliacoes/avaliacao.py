@@ -1,5 +1,7 @@
+import io
 import re
 
+import aiohttp
 import discord
 from discord.ext import commands
 
@@ -19,6 +21,10 @@ VIDEO_EXTENSIONS = (
     ".mkv",
     ".avi",
 )
+
+# Discord tem limite de upload por arquivo (padrão 25MB, servidores boost
+# podem chegar a 50MB/100MB). Ajuste conforme o boost level do seu servidor.
+MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 
 
 class AvaliacaoView(discord.ui.View):
@@ -56,6 +62,14 @@ class Avaliacao(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self._session: aiohttp.ClientSession | None = None
+
+    async def cog_load(self):
+        self._session = aiohttp.ClientSession()
+
+    async def cog_unload(self):
+        if self._session:
+            await self._session.close()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -94,10 +108,10 @@ class Avaliacao(commands.Cog):
 
             texto = message.content
 
-            attachment_urls = [
-                attachment.url
-                for attachment in video_attachments
-            ]
+            # Baixa os bytes de cada vídeo anexado ANTES de deletar a
+            # mensagem original (a URL do attachment pode ficar
+            # inválida depois que a mensagem é apagada).
+            files = await self.download_attachments(video_attachments)
 
             await message.delete()
 
@@ -107,17 +121,11 @@ class Avaliacao(commands.Cog):
                 message.id,
             )
 
-            conteudo = texto
-
-            if attachment_urls:
-
-                if conteudo:
-                    conteudo += "\n\n"
-
-                conteudo += "\n".join(attachment_urls)
+            conteudo = texto if texto else None
 
             nova_mensagem = await message.channel.send(
                 content=conteudo,
+                files=files if files else None,
                 view=AvaliacaoView(autor_id),
                 allowed_mentions=discord.AllowedMentions.none(),
             )
@@ -151,9 +159,48 @@ class Avaliacao(commands.Cog):
                 error,
             )
 
+    async def download_attachments(
+        self,
+        attachments: list[discord.Attachment],
+    ) -> list[discord.File]:
+        """Baixa cada attachment e devolve como discord.File pronto
+        para reenvio. Attachments maiores que MAX_UPLOAD_BYTES são
+        ignorados (nesse caso, cai de volta pra reenviar só o link)."""
+
+        files = []
+
+        for attachment in attachments:
+
+            if attachment.size and attachment.size > MAX_UPLOAD_BYTES:
+                logger.warning(
+                    "Anexo muito grande para reenvio direto | "
+                    "arquivo=%s | tamanho=%s",
+                    attachment.filename,
+                    attachment.size,
+                )
+                continue
+
+            try:
+                data = await attachment.read()
+            except discord.HTTPException as error:
+                logger.error(
+                    "Falha ao baixar anexo | arquivo=%s | erro=%s",
+                    attachment.filename,
+                    error,
+                )
+                continue
+
+            files.append(
+                discord.File(
+                    io.BytesIO(data),
+                    filename=attachment.filename,
+                )
+            )
+
+        return files
+
     @staticmethod
     def get_urls(content: str) -> list[str]:
-       
 
         return URL_REGEX.findall(content)
 
@@ -161,7 +208,6 @@ class Avaliacao(commands.Cog):
     def get_video_attachments(
         message: discord.Message,
     ) -> list[discord.Attachment]:
-        
 
         videos = []
 
