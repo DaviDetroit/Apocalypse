@@ -1,43 +1,82 @@
 import asyncio
-import discord
 import os
 
+import discord
 from discord.ext import commands
+
+from database.connection import (
+    init_database,
+    close_database,
+)
+
 from utils.logger import setup_logger
+
 
 logger = setup_logger()
 
+TOKEN = os.getenv("DISCORD_TOKEN")
+
 intents = discord.Intents.default()
+
 intents.message_content = True
 intents.members = True
 
 bot = commands.Bot(
     command_prefix="!",
-    intents=intents
+    intents=intents,
 )
+
 
 @bot.event
 async def on_ready():
-    logger.info(f"Bot conectado como {bot.user}")
+
+    logger.info(
+        "Bot conectado como %s",
+        bot.user
+    )
 
 
 async def load_cogs():
+
     for root, _, files in os.walk("cogs"):
+
         for file in files:
-            if file.endswith(".py"):
-                module = os.path.join(root, file)
-                module = module.replace("\\", ".").replace("/", ".")[:-3]
 
-                await bot.load_extension(module)
+            if not file.endswith(".py"):
+                continue
 
-                logger.info(f"Carregado: {module}")
+            module = os.path.join(root, file)
 
-TOKEN = os.getenv("DISCORD_TOKEN")
+            module = (
+                module
+                .replace("\\", ".")
+                .replace("/", ".")
+                [:-3]
+            )
+
+            await bot.load_extension(module)
+
+            logger.info(
+                "Carregado: %s",
+                module
+            )
 
 
 async def main():
-    await load_cogs()
-    await bot.start(TOKEN)
+
+    await init_database()
+
+    try:
+
+        async with bot:
+
+            await load_cogs()
+
+            await bot.start(TOKEN)
+
+    finally:
+
+        await close_database()
 
 
 if __name__ == "__main__":

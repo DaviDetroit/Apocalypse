@@ -1,7 +1,5 @@
-import io
 import re
 
-import aiohttp
 import discord
 from discord.ext import commands
 
@@ -22,57 +20,11 @@ VIDEO_EXTENSIONS = (
     ".avi",
 )
 
-# Limite de segurança absoluto pra não estourar memória baixando vídeos
-# enormes. O valor real de aceitação é decidido pelo próprio Discord no
-# momento do envio (ver fallback de 413 em on_message) — não confiamos
-# em guild.filesize_limit porque a lib pode estar desatualizada em
-# relação aos limites atuais da Discord.
-HARD_CAP_BYTES = 100 * 1024 * 1024
-
-
-class AvaliacaoView(discord.ui.View):
-
-    def __init__(self, autor_id: int):
-        super().__init__(timeout=None)
-
-        self.autor_id = autor_id
-
-    @discord.ui.button(
-        label="Avaliar jogada",
-        emoji="⭐",
-        style=discord.ButtonStyle.secondary,
-        custom_id="avaliar_jogada",
-    )
-    async def avaliar_jogada(
-        self,
-        interaction: discord.Interaction,
-        button: discord.ui.Button,
-    ):
-        await interaction.response.send_message(
-            "Avaliação recebida!",
-            ephemeral=True,
-        )
-
-        logger.info(
-            "Avaliação iniciada | avaliador=%s | autor=%s | mensagem=%s",
-            interaction.user.id,
-            self.autor_id,
-            interaction.message.id,
-        )
-
 
 class Avaliacao(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self._session: aiohttp.ClientSession | None = None
-
-    async def cog_load(self):
-        self._session = aiohttp.ClientSession()
-
-    async def cog_unload(self):
-        if self._session:
-            await self._session.close()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
@@ -81,107 +33,38 @@ class Avaliacao(commands.Cog):
         if message.author.bot:
             return
 
-        # Ignora outros canais
+        # Só processa o canal de clipes
         if message.channel.id != CLIPES_JOGOS:
             return
 
-        # Procura links
+        # Verifica links
         urls = self.get_urls(message.content)
 
-        # Procura vídeos anexados
+        # Verifica vídeos anexados
         video_attachments = self.get_video_attachments(message)
 
-        # Se não tiver link nem vídeo anexado, ignora
+        # Se não tiver link nem vídeo, ignora
         if not urls and not video_attachments:
             return
 
-        autor_id = message.author.id
-
-        logger.info(
-            "Vídeo detectado | autor=%s | canal=%s | mensagem=%s | "
-            "links=%s | anexos=%s",
-            autor_id,
-            message.channel.id,
-            message.id,
-            len(urls),
-            len(video_attachments),
-        )
-
         try:
-
-            texto = message.content
-
-            # Baixa os bytes de cada vídeo anexado ANTES de deletar a
-            # mensagem original (a URL do attachment pode ficar
-            # inválida depois que a mensagem é apagada). Não filtramos
-            # por um limite calculado de antemão — deixamos o Discord
-            # decidir no envio e tratamos o 413 abaixo, se acontecer.
-            files, oversized = await self.download_attachments(
-                video_attachments,
-            )
-
-            await message.delete()
+            await message.add_reaction("⭐")
 
             logger.info(
-                "Mensagem original removida | autor=%s | mensagem=%s",
-                autor_id,
-                message.id,
-            )
-
-            conteudo = texto if texto else None
-
-            # Anexos grandes demais para reenvio direto: manda o link
-            # original como texto, já que o arquivo não some do CDN
-            # (só a mensagem original é que é removida).
-            if oversized:
-                links = "\n".join(a.url for a in oversized)
-                conteudo = f"{conteudo}\n\n{links}" if conteudo else links
-
-            try:
-                nova_mensagem = await message.channel.send(
-                    content=conteudo,
-                    files=files if files else None,
-                    view=AvaliacaoView(autor_id),
-                    allowed_mentions=discord.AllowedMentions.none(),
-                )
-            except discord.HTTPException as error:
-                if error.status == 413 and files:
-                    # Mesmo dentro do limite estimado, o Discord recusou
-                    # o payload. Reenvia só com o(s) link(s) original(is)
-                    # como fallback pra não perder a publicação.
-                    logger.warning(
-                        "413 ao enviar attachment, caindo para link | "
-                        "autor=%s | mensagem=%s",
-                        autor_id,
-                        message.id,
-                    )
-                    links = "\n".join(a.url for a in video_attachments)
-                    conteudo_fallback = (
-                        f"{texto}\n\n{links}" if texto else links
-                    )
-                    nova_mensagem = await message.channel.send(
-                        content=conteudo_fallback,
-                        view=AvaliacaoView(autor_id),
-                        allowed_mentions=discord.AllowedMentions.none(),
-                    )
-                else:
-                    raise
-
-            logger.info(
-                "Publicação republicada | autor=%s | "
-                "mensagem_original=%s | mensagem_nova=%s | canal=%s",
-                autor_id,
-                message.id,
-                nova_mensagem.id,
+                "Avaliação disponível | autor=%s | canal=%s | "
+                "mensagem=%s | links=%s | anexos=%s",
+                message.author.id,
                 message.channel.id,
+                message.id,
+                len(urls),
+                len(video_attachments),
             )
 
         except discord.Forbidden:
 
             logger.warning(
-                "Sem permissão para processar publicação | "
-                "autor=%s | mensagem=%s | canal=%s",
-                autor_id,
+                "Sem permissão para adicionar reação | "
+                "mensagem=%s | canal=%s",
                 message.id,
                 message.channel.id,
             )
@@ -189,64 +72,11 @@ class Avaliacao(commands.Cog):
         except discord.HTTPException as error:
 
             logger.error(
-                "Erro HTTP ao republicar publicação | "
-                "autor=%s | mensagem=%s | erro=%s",
-                autor_id,
+                "Erro ao adicionar reação | "
+                "mensagem=%s | erro=%s",
                 message.id,
                 error,
             )
-
-    @staticmethod
-    def get_upload_limit(message: discord.Message) -> int:
-        """Mantido apenas como referência/log — não é mais usado para
-        decidir se um arquivo é enviado ou não (ver comentário em
-        HARD_CAP_BYTES)."""
-
-        if message.guild is not None:
-            return message.guild.filesize_limit
-
-        return HARD_CAP_BYTES
-
-    async def download_attachments(
-        self,
-        attachments: list[discord.Attachment],
-    ) -> tuple[list[discord.File], list[discord.Attachment]]:
-    
-
-        files = []
-        oversized = []
-
-        for attachment in attachments:
-
-            if attachment.size and attachment.size > HARD_CAP_BYTES:
-                logger.warning(
-                    "Anexo excede o limite de segurança | "
-                    "arquivo=%s | tamanho=%s",
-                    attachment.filename,
-                    attachment.size,
-                )
-                oversized.append(attachment)
-                continue
-
-            try:
-                data = await attachment.read()
-            except discord.HTTPException as error:
-                logger.error(
-                    "Falha ao baixar anexo | arquivo=%s | erro=%s",
-                    attachment.filename,
-                    error,
-                )
-                oversized.append(attachment)
-                continue
-
-            files.append(
-                discord.File(
-                    io.BytesIO(data),
-                    filename=attachment.filename,
-                )
-            )
-
-        return files, oversized
 
     @staticmethod
     def get_urls(content: str) -> list[str]:

@@ -1,20 +1,47 @@
 import os
 
-import mysql.connector
-from mysql.connector import pooling
+import aiomysql
+
+from utils.logger import setup_logger
 
 
-db_pool = pooling.MySQLConnectionPool(
-    pool_name="apocalypse_pool",
-    pool_size=5,
-    pool_reset_session=True,
+logger = setup_logger()
 
-    host=os.getenv("DB_HOST"),
-    port=int(os.getenv("DB_PORT")),
-    database=os.getenv("DB_NAME"),
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD")
-)
+_pool = None
 
-def get_connection():
-    return db_pool.get_connection()
+
+async def init_database():
+    global _pool
+
+    _pool = await aiomysql.create_pool(
+        host=os.getenv("DB_HOST"),
+        port=int(os.getenv("DB_PORT")),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        db=os.getenv("DB_NAME"),
+        minsize=1,
+        maxsize=5,
+        autocommit=False,
+        charset="utf8mb4",
+    )
+
+    logger.info("Pool MySQL conectado")
+
+
+def get_pool():
+    if _pool is None:
+        raise RuntimeError("Pool do MySQL ainda não foi inicializado.")
+
+    return _pool
+
+
+async def close_database():
+    global _pool
+
+    if _pool is not None:
+        _pool.close()
+        await _pool.wait_closed()
+
+        _pool = None
+
+        logger.info("Pool MySQL encerrado")
