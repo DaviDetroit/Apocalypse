@@ -24,7 +24,7 @@ VIDEO_EXTENSIONS = (
 
 # Discord tem limite de upload por arquivo (padrão 25MB, servidores boost
 # podem chegar a 50MB/100MB). Ajuste conforme o boost level do seu servidor.
-MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+MAX_UPLOAD_BYTES = 30 * 1024 * 1024
 
 
 class AvaliacaoView(discord.ui.View):
@@ -74,7 +74,6 @@ class Avaliacao(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
 
-        # Ignora mensagens enviadas por bots
         if message.author.bot:
             return
 
