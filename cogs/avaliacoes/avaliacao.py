@@ -22,9 +22,9 @@ VIDEO_EXTENSIONS = (
     ".avi",
 )
 
-# Discord tem limite de upload por arquivo (padrão 25MB, servidores boost
-# podem chegar a 50MB/100MB). Ajuste conforme o boost level do seu servidor.
-MAX_UPLOAD_BYTES = 30 * 1024 * 1024
+# Fallback caso não seja possível checar guild.filesize_limit (ex: DM).
+# O limite real é obtido dinamicamente por servidor em get_upload_limit().
+DEFAULT_MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 
 
 class AvaliacaoView(discord.ui.View):
@@ -74,6 +74,7 @@ class Avaliacao(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
 
+        # Ignora mensagens enviadas por bots
         if message.author.bot:
             return
 
@@ -107,10 +108,15 @@ class Avaliacao(commands.Cog):
 
             texto = message.content
 
+            upload_limit = self.get_upload_limit(message)
+
             # Baixa os bytes de cada vídeo anexado ANTES de deletar a
             # mensagem original (a URL do attachment pode ficar
             # inválida depois que a mensagem é apagada).
-            files = await self.download_attachments(video_attachments)
+            files, oversized = await self.download_attachments(
+                video_attachments,
+                upload_limit,
+            )
 
             await message.delete()
 
@@ -122,12 +128,42 @@ class Avaliacao(commands.Cog):
 
             conteudo = texto if texto else None
 
-            nova_mensagem = await message.channel.send(
-                content=conteudo,
-                files=files if files else None,
-                view=AvaliacaoView(autor_id),
-                allowed_mentions=discord.AllowedMentions.none(),
-            )
+            # Anexos grandes demais para reenvio direto: manda o link
+            # original como texto, já que o arquivo não some do CDN
+            # (só a mensagem original é que é removida).
+            if oversized:
+                links = "\n".join(a.url for a in oversized)
+                conteudo = f"{conteudo}\n\n{links}" if conteudo else links
+
+            try:
+                nova_mensagem = await message.channel.send(
+                    content=conteudo,
+                    files=files if files else None,
+                    view=AvaliacaoView(autor_id),
+                    allowed_mentions=discord.AllowedMentions.none(),
+                )
+            except discord.HTTPException as error:
+                if error.status == 413 and files:
+                    # Mesmo dentro do limite estimado, o Discord recusou
+                    # o payload. Reenvia só com o(s) link(s) original(is)
+                    # como fallback pra não perder a publicação.
+                    logger.warning(
+                        "413 ao enviar attachment, caindo para link | "
+                        "autor=%s | mensagem=%s",
+                        autor_id,
+                        message.id,
+                    )
+                    links = "\n".join(a.url for a in video_attachments)
+                    conteudo_fallback = (
+                        f"{texto}\n\n{links}" if texto else links
+                    )
+                    nova_mensagem = await message.channel.send(
+                        content=conteudo_fallback,
+                        view=AvaliacaoView(autor_id),
+                        allowed_mentions=discord.AllowedMentions.none(),
+                    )
+                else:
+                    raise
 
             logger.info(
                 "Publicação republicada | autor=%s | "
@@ -158,25 +194,46 @@ class Avaliacao(commands.Cog):
                 error,
             )
 
+    @staticmethod
+    def get_upload_limit(message: discord.Message) -> int:
+        """Limite de upload real do servidor (varia com o nível de
+        boost). Cai para o valor padrão se não houver guild
+        disponível (ex: mensagens de DM)."""
+
+        if message.guild is not None:
+            return message.guild.filesize_limit
+
+        return DEFAULT_MAX_UPLOAD_BYTES
+
     async def download_attachments(
         self,
         attachments: list[discord.Attachment],
-    ) -> list[discord.File]:
+        upload_limit: int,
+    ) -> tuple[list[discord.File], list[discord.Attachment]]:
         """Baixa cada attachment e devolve como discord.File pronto
-        para reenvio. Attachments maiores que MAX_UPLOAD_BYTES são
-        ignorados (nesse caso, cai de volta pra reenviar só o link)."""
+        para reenvio. Attachments maiores que upload_limit são
+        deixados de fora e retornados separadamente (o chamador decide
+        o fallback, normalmente reenviar só o link)."""
+
+        # Margem de segurança: o multipart/form-data do upload adiciona
+        # overhead sobre o tamanho puro do arquivo, então deixamos folga
+        # em vez de usar o limite exato.
+        limite_seguro = int(upload_limit * 0.97)
 
         files = []
+        oversized = []
 
         for attachment in attachments:
 
-            if attachment.size and attachment.size > MAX_UPLOAD_BYTES:
+            if attachment.size and attachment.size > limite_seguro:
                 logger.warning(
                     "Anexo muito grande para reenvio direto | "
-                    "arquivo=%s | tamanho=%s",
+                    "arquivo=%s | tamanho=%s | limite=%s",
                     attachment.filename,
                     attachment.size,
+                    upload_limit,
                 )
+                oversized.append(attachment)
                 continue
 
             try:
@@ -187,6 +244,7 @@ class Avaliacao(commands.Cog):
                     attachment.filename,
                     error,
                 )
+                oversized.append(attachment)
                 continue
 
             files.append(
@@ -196,7 +254,7 @@ class Avaliacao(commands.Cog):
                 )
             )
 
-        return files
+        return files, oversized
 
     @staticmethod
     def get_urls(content: str) -> list[str]:
