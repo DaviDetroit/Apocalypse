@@ -1,6 +1,7 @@
 import re
 
 import discord
+
 from discord.ext import commands
 
 from utils.logger import setup_logger
@@ -8,7 +9,10 @@ from utils.logger import setup_logger
 
 logger = setup_logger()
 
+
 CLIPES_JOGOS = 751088200742862968
+
+EMOJI = "<:778612sigmaleonkennedy:1540797776038989884>"
 
 URL_REGEX = re.compile(r"https?://[^\s<>]+")
 
@@ -29,7 +33,7 @@ class Avaliacao(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
 
-        # Ignora mensagens enviadas por bots
+        # Ignora mensagens de bots
         if message.author.bot:
             return
 
@@ -37,27 +41,27 @@ class Avaliacao(commands.Cog):
         if message.channel.id != CLIPES_JOGOS:
             return
 
-        # Verifica links
-        urls = self.get_urls(message.content)
+        has_url = bool(
+            self.get_urls(message.content)
+        )
 
-        # Verifica vídeos anexados
-        video_attachments = self.get_video_attachments(message)
+        # Verifica se possui vídeo anexado
+        has_video = self.has_video_attachment(message)
 
-        # Se não tiver link nem vídeo, ignora
-        if not urls and not video_attachments:
+        # Não é uma publicação avaliável
+        if not has_url and not has_video:
             return
 
         try:
-            await message.add_reaction("⭐")
+
+            await message.add_reaction(EMOJI)
 
             logger.info(
-                "Avaliação disponível | autor=%s | canal=%s | "
-                "mensagem=%s | links=%s | anexos=%s",
+                "Avaliação disponível | "
+                "autor=%s | canal=%s | mensagem=%s",
                 message.author.id,
                 message.channel.id,
                 message.id,
-                len(urls),
-                len(video_attachments),
             )
 
         except discord.Forbidden:
@@ -84,23 +88,22 @@ class Avaliacao(commands.Cog):
         return URL_REGEX.findall(content)
 
     @staticmethod
-    def get_video_attachments(
+    def has_video_attachment(
         message: discord.Message,
-    ) -> list[discord.Attachment]:
-
-        videos = []
+    ) -> bool:
 
         for attachment in message.attachments:
 
             if attachment.content_type:
                 if attachment.content_type.startswith("video/"):
-                    videos.append(attachment)
-                    continue
+                    return True
 
-            if attachment.filename.lower().endswith(VIDEO_EXTENSIONS):
-                videos.append(attachment)
+            if attachment.filename.lower().endswith(
+                VIDEO_EXTENSIONS
+            ):
+                return True
 
-        return videos
+        return False
 
 
 async def setup(bot: commands.Bot):
