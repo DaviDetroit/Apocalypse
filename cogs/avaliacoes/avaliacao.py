@@ -22,9 +22,12 @@ VIDEO_EXTENSIONS = (
     ".avi",
 )
 
-# Fallback caso não seja possível checar guild.filesize_limit (ex: DM).
-# O limite real é obtido dinamicamente por servidor em get_upload_limit().
-DEFAULT_MAX_UPLOAD_BYTES = 20 * 1024 * 1024
+# Limite de segurança absoluto pra não estourar memória baixando vídeos
+# enormes. O valor real de aceitação é decidido pelo próprio Discord no
+# momento do envio (ver fallback de 413 em on_message) — não confiamos
+# em guild.filesize_limit porque a lib pode estar desatualizada em
+# relação aos limites atuais da Discord.
+HARD_CAP_BYTES = 100 * 1024 * 1024
 
 
 class AvaliacaoView(discord.ui.View):
@@ -108,14 +111,13 @@ class Avaliacao(commands.Cog):
 
             texto = message.content
 
-            upload_limit = self.get_upload_limit(message)
-
             # Baixa os bytes de cada vídeo anexado ANTES de deletar a
             # mensagem original (a URL do attachment pode ficar
-            # inválida depois que a mensagem é apagada).
+            # inválida depois que a mensagem é apagada). Não filtramos
+            # por um limite calculado de antemão — deixamos o Discord
+            # decidir no envio e tratamos o 413 abaixo, se acontecer.
             files, oversized = await self.download_attachments(
                 video_attachments,
-                upload_limit,
             )
 
             await message.delete()
@@ -196,42 +198,32 @@ class Avaliacao(commands.Cog):
 
     @staticmethod
     def get_upload_limit(message: discord.Message) -> int:
-        """Limite de upload real do servidor (varia com o nível de
-        boost). Cai para o valor padrão se não houver guild
-        disponível (ex: mensagens de DM)."""
+        """Mantido apenas como referência/log — não é mais usado para
+        decidir se um arquivo é enviado ou não (ver comentário em
+        HARD_CAP_BYTES)."""
 
         if message.guild is not None:
             return message.guild.filesize_limit
 
-        return DEFAULT_MAX_UPLOAD_BYTES
+        return HARD_CAP_BYTES
 
     async def download_attachments(
         self,
         attachments: list[discord.Attachment],
-        upload_limit: int,
     ) -> tuple[list[discord.File], list[discord.Attachment]]:
-        """Baixa cada attachment e devolve como discord.File pronto
-        para reenvio. Attachments maiores que upload_limit são
-        deixados de fora e retornados separadamente (o chamador decide
-        o fallback, normalmente reenviar só o link)."""
-
-        # Margem de segurança: o multipart/form-data do upload adiciona
-        # overhead sobre o tamanho puro do arquivo, então deixamos folga
-        # em vez de usar o limite exato.
-        limite_seguro = int(upload_limit * 0.97)
+    
 
         files = []
         oversized = []
 
         for attachment in attachments:
 
-            if attachment.size and attachment.size > limite_seguro:
+            if attachment.size and attachment.size > HARD_CAP_BYTES:
                 logger.warning(
-                    "Anexo muito grande para reenvio direto | "
-                    "arquivo=%s | tamanho=%s | limite=%s",
+                    "Anexo excede o limite de segurança | "
+                    "arquivo=%s | tamanho=%s",
                     attachment.filename,
                     attachment.size,
-                    upload_limit,
                 )
                 oversized.append(attachment)
                 continue
