@@ -70,7 +70,7 @@ class ReactionEvents(commands.Cog):
                 await self._remove_reaction(payload)
                 warning = await channel.send(
                     f"<@{evaluator_id}> "
-                    "❌ Você não pode avaliar a própria publicação.",
+                    "<:654404secret:1540852720263626872> Assim como você não escolheu nascer, você não pode votar em si!",
                     allowed_mentions=discord.AllowedMentions(
                         users=True,
                     ),
@@ -188,12 +188,16 @@ class ReactionEvents(commands.Cog):
             ),
         )
 
-        await channel.send(
-            embed=embed,
-            allowed_mentions=discord.AllowedMentions(
-                users=True
-            ),
-        )
+        try:
+            await member.send(
+                embed=embed,
+            )
+        except discord.Forbidden:
+            logger.warning(
+                "Não foi possível enviar DM para %s. "
+                "O usuário pode ter as mensagens privadas desativadas.",
+                member.id,
+            )
 
 
 async def setup(bot: commands.Bot):
