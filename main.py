@@ -33,6 +33,7 @@ async def load_cogs():
                 logger.info(f"Carregado: {module}")
 
 TOKEN = os.getenv("DISCORD_TOKEN")
+logger.info(f"TOKEN EXISTE: {TOKEN is not None}")
 
 
 async def main():
