@@ -3,70 +3,84 @@ import re
 import discord
 from discord.ext import commands
 
-CLIPES_JOGOS = 751088200742862968
+
+CLIPES_JOGOS = 1427044546973405184
+
+URL_REGEX = re.compile(r"https?://[^\s<>]+")
 
 
 class AvaliacaoView(discord.ui.View):
-    def __init__(self):
+    def __init__(self, autor_id: int):
         super().__init__(timeout=None)
+
+        self.autor_id = autor_id
+
     @discord.ui.button(
         label="Avaliar jogada",
         emoji="⭐",
         style=discord.ButtonStyle.secondary,
-        custom_id="avaliar_jogada"
+        custom_id="avaliar_jogada",
     )
     async def avaliar_jogada(
         self,
         interaction: discord.Interaction,
-        button: discord.ui.Button
+        button: discord.ui.Button,
     ):
         await interaction.response.send_message(
             "Avaliação recebida!",
-            ephemeral=True
-        )  
+            ephemeral=True,
+        )
+
 
 class Avaliacao(commands.Cog):
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
+
+        # Ignora mensagens enviadas pelo próprio bot
         if message.author.bot:
             return
+
         if message.channel.id != CLIPES_JOGOS:
             return
-        if not self.is_video(message):
+
+        urls = self.get_urls(message.content)
+
+        if not urls:
             return
-        await message.edit(
-            view=AvaliacaoView()
-        )
-    @staticmethod
-    def is_video(message: discord.Message) -> bool:
-        for attachment in message.attachments:
-            if attachment.content_type:
-                if attachment.content_type.startswith("video/"):
-                    return True
 
-            if attachment.filename.lower().endswith(
-                (".mp4", ".mov", ".webm", ".mkv", ".avi")
-            ):
-                return True
+        autor_id = message.author.id
 
-            urls = re.findall(
-                r"https?://[^\s<>]+",
-                message.content
+        texto = message.content
+
+        try:
+            await message.delete()
+
+
+            await message.channel.send(
+                content=texto,
+                view=AvaliacaoView(autor_id),
+                allowed_mentions=discord.AllowedMentions.none(),
             )
 
-            for url in urls:
-                url = url.lower().split("?")[0]
+        except discord.Forbidden:
+            print(
+                "O bot não possui permissão para apagar "
+                "ou enviar mensagens."
+            )
 
-                if url.endswith(
-                    (".mp4", ".mov", ".webm", ".mkv", ".avi")
-                ):
-                    return True
-            return False
-            
+        except discord.HTTPException as error:
+            print(f"Erro ao republicar mensagem: {error}")
+
+    @staticmethod
+    def get_urls(content: str) -> list[str]:
+       
+
+        return URL_REGEX.findall(content)
+
+
 async def setup(bot: commands.Bot):
     await bot.add_cog(Avaliacao(bot))
-
-
-    
