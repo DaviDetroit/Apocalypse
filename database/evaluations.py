@@ -8,15 +8,40 @@ async def process_evaluation(
     points: int,
 ) -> bool:
 
+    if author_discord_id == evaluator_discord_id:
+        return False
+
     pool = get_pool()
 
     async with pool.acquire() as connection:
         try:
             async with connection.cursor() as cursor:
 
-                if author_discord_id == evaluator_discord_id:
-                    return False
+                # Garante que o autor exista
+                await cursor.execute(
+                    """
+                    INSERT INTO users (discord_id)
+                    VALUES (%s)
+                    ON DUPLICATE KEY UPDATE discord_id = VALUES(discord_id)
+                    """,
+                    (
+                        str(author_discord_id),
+                    ),
+                )
 
+                # Garante que o avaliador exista
+                await cursor.execute(
+                    """
+                    INSERT INTO users (discord_id)
+                    VALUES (%s)
+                    ON DUPLICATE KEY UPDATE discord_id = VALUES(discord_id)
+                    """,
+                    (
+                        str(evaluator_discord_id),
+                    ),
+                )
+
+                # Busca os IDs internos dos dois usuários
                 await cursor.execute(
                     """
                     SELECT id, discord_id
@@ -37,7 +62,7 @@ async def process_evaluation(
                     for user_id, discord_id in rows
                 }
 
-                # Os usuários precisam existir
+                # Segurança: verifica se os usuários realmente existem
                 if author_discord_id not in users:
                     raise ValueError(
                         f"Autor não encontrado: {author_discord_id}"
@@ -51,7 +76,7 @@ async def process_evaluation(
                 author_id = users[author_discord_id]
                 evaluator_id = users[evaluator_discord_id]
 
-                # Verifica se já avaliou essa publicação
+                # Verifica se o usuário já avaliou essa publicação
                 await cursor.execute(
                     """
                     SELECT 1
@@ -69,6 +94,7 @@ async def process_evaluation(
                 if await cursor.fetchone() is not None:
                     return False
 
+                # Cria a avaliação
                 await cursor.execute(
                     """
                     CALL create_evaluation(%s, %s, %s, %s)
@@ -81,6 +107,13 @@ async def process_evaluation(
                     ),
                 )
 
+                # IMPORTANTE:
+                # Procedures podem deixar resultados pendentes no cursor.
+                # Consumimos os resultados antes de executar a próxima query.
+                while await cursor.nextset():
+                    pass
+
+                # Adiciona os pontos ao autor
                 await cursor.execute(
                     """
                     CALL add_user_points(%s, %s)
@@ -91,6 +124,10 @@ async def process_evaluation(
                     ),
                 )
 
+                # Consome os resultados da segunda procedure
+                while await cursor.nextset():
+                    pass
+
             await connection.commit()
 
             return True
@@ -100,7 +137,9 @@ async def process_evaluation(
             raise
 
 
-async def count_daily_evaluations(author_discord_id: int) -> int:
+async def count_daily_evaluations(
+    author_discord_id: int,
+) -> int:
 
     pool = get_pool()
 
