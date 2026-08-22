@@ -3,7 +3,7 @@ import re
 import discord
 from discord.ext import commands
 
-CLIPES_JOGOS = 1427044546973405184
+CLIPES_JOGOS = 751088200742862968
 
 
 class AvaliacaoView(discord.ui.View):
