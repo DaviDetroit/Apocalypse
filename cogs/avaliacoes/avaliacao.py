@@ -8,7 +8,7 @@ from utils.logger import setup_logger
 
 logger = setup_logger()
 
-CLIPES_JOGOS = 1427044546973405184
+CLIPES_JOGOS = 751088200742862968
 
 URL_REGEX = re.compile(r"https?://[^\s<>]+")
 
@@ -92,16 +92,13 @@ class Avaliacao(commands.Cog):
 
         try:
 
-            # Guarda o texto original
             texto = message.content
 
-            # Pega as URLs dos vídeos anexados
             attachment_urls = [
                 attachment.url
                 for attachment in video_attachments
             ]
 
-            # Apaga a mensagem original
             await message.delete()
 
             logger.info(
@@ -110,10 +107,8 @@ class Avaliacao(commands.Cog):
                 message.id,
             )
 
-            # Começa com o texto original
             conteudo = texto
 
-            # Adiciona os vídeos anexados como URLs
             if attachment_urls:
 
                 if conteudo:
@@ -121,7 +116,6 @@ class Avaliacao(commands.Cog):
 
                 conteudo += "\n".join(attachment_urls)
 
-            # Republica a publicação
             nova_mensagem = await message.channel.send(
                 content=conteudo,
                 view=AvaliacaoView(autor_id),
