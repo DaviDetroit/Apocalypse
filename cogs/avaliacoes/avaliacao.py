@@ -10,7 +10,7 @@ from utils.logger import setup_logger
 logger = setup_logger()
 
 #Canal
-CLIPES_JOGOS = 1490007972791975950
+CLIPES_JOGOS = 1427044546973405184
 
 EMOJI = "<:778612sigmaleonkennedy:1540797776038989884>"
 

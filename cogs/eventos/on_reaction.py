@@ -13,10 +13,10 @@ from utils.logger import setup_logger
 logger = setup_logger()
 
 
-CLIPES_JOGOS = 1490007972791975950
-EMOJI = "<:778612sigmaleonkennedy:1540797776038989884>"
+CLIPES_JOGOS = 1427044546973405184
+EMOJI = "<:1280pxUmbrella_Corporation_logo:1540878040354000966>"
 
-POINTS_PER_EVALUATION = 1
+POINTS_PER_EVALUATION = 20
 DAILY_REWARD_MILESTONE = 5
 
 
@@ -90,7 +90,6 @@ class ReactionEvents(commands.Cog):
 
                 return
 
-            # Processa avaliação no banco
             created = await process_evaluation(
                 message_id=payload.message_id,
                 author_discord_id=author_id,
@@ -116,7 +115,6 @@ class ReactionEvents(commands.Cog):
                 POINTS_PER_EVALUATION,
             )
 
-            # Verifica quantidade de avaliações recebidas hoje
             daily_count = await count_daily_evaluations(
                 author_id
             )
