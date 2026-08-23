@@ -12,7 +12,7 @@ from utils.logger import setup_logger
 
 logger = setup_logger()
 
-
+#emoji
 CLIPES_JOGOS = 1427044546973405184
 EMOJI = "<:1280pxUmbrella_Corporation_logo:1540878040354000966>"
 
