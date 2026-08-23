@@ -75,7 +75,7 @@ class Avaliacao(commands.Cog):
         except discord.HTTPException as error:
 
             logger.error(
-                "Erro ao adicionar reação :() | "
+                "Erro ao adicionar reação :( | "
                 "mensagem=%s | erro=%s",
                 message.id,
                 error,

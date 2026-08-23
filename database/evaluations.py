@@ -63,12 +63,13 @@ async def process_evaluation(
                 author_id = users[author_discord_id]
                 evaluator_id = users[evaluator_discord_id]
 
+                # Verifica se o usuário já avaliou essa publicação
                 await cursor.execute(
                     """
                     SELECT 1
                     FROM evaluations
                     WHERE message_id = %s
-                    AND evaluator_id = %s
+                      AND evaluator_id = %s
                     LIMIT 1
                     """,
                     (
@@ -92,7 +93,6 @@ async def process_evaluation(
                     ),
                 )
 
-                
                 while await cursor.nextset():
                     pass
 
@@ -106,7 +106,7 @@ async def process_evaluation(
                     ),
                 )
 
-                # Consome os resultados da segunda procedure
+                # Consome o resultado da segunda procedure
                 while await cursor.nextset():
                     pass
 
@@ -135,7 +135,7 @@ async def count_daily_evaluations(
                 INNER JOIN users u
                     ON u.id = e.author_id
                 WHERE u.discord_id = %s
-                AND e.created_at >= CURDATE()
+                  AND e.created_at >= CURDATE()
                 """,
                 (
                     str(author_discord_id),
@@ -145,3 +145,28 @@ async def count_daily_evaluations(
             result = await cursor.fetchone()
 
             return result[0] if result else 0
+
+
+async def get_monthly_top_evaluations(
+    limit: int = 3,
+):
+
+    pool = get_pool()
+
+    async with pool.acquire() as connection:
+        async with connection.cursor() as cursor:
+
+            await cursor.execute(
+                """
+                SELECT
+                    discord_id,
+                    total
+                FROM monthly_evaluation_ranking
+                LIMIT %s
+                """,
+                (
+                    limit,
+                ),
+            )
+
+            return await cursor.fetchall()
