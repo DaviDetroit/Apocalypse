@@ -9,7 +9,7 @@ from utils.logger import setup_logger
 
 logger = setup_logger()
 
-CANAL_DESTAQUES = 1490007972267430105
+CANAL_DESTAQUES = 1464324068495982788
 
 HORA_DESTAQUE = 20
 MINUTO_DESTAQUE = 0
