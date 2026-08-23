@@ -12,7 +12,7 @@ logger = setup_logger()
 #Canal
 CLIPES_JOGOS = 1427044546973405184
 
-EMOJI = "<:778612sigmaleonkennedy:1540797776038989884>"
+EMOJI = "<:1280pxUmbrella_Corporation_logo:1540878040354000966>"
 
 URL_REGEX = re.compile(r"https?://[^\s<>]+")
 
