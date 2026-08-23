@@ -13,7 +13,7 @@ from utils.logger import setup_logger
 logger = setup_logger()
 
 
-CLIPES_JOGOS = 751088200742862968
+CLIPES_JOGOS = 1490007972791975950
 EMOJI = "<:778612sigmaleonkennedy:1540797776038989884>"
 
 POINTS_PER_EVALUATION = 1
