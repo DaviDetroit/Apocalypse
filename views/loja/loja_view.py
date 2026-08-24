@@ -8,8 +8,8 @@ from services.loja_service import LojaService
 COR_PADRAO = discord.Color.dark_red()
 COR_CARGOS = discord.Color.blurple()
 COR_PRANKS = discord.Color.orange()
-COR_CRIMSON = discord.Color.from_rgb(220, 20, 60)
-COR_VERDUGO = discord.Color.purple()
+COR_CRIMSON = discord.Color.yellow()
+COR_VERDUGO = discord.Color.green()
 
 # Footer padrão
 FOOTER_TEXT = "Loja do Licker"
@@ -47,9 +47,9 @@ class LojaView(View):
         )
 
         embed.add_field(
-            name="🔴 Crimson Head — 200 pontos",
+            name="<:1477335586221199612:1541493141201227856> Crimson Head — 200 pesetas",
             value=(
-                "• Garante **12 horas** de duração do cargo\n"
+                "• Garante **24 horas** de duração do cargo\n"
                 "• Acesso ao **chat geral do Licker**\n"
                 "• Permissão para **transmitir no chat de rádio**"
             ),
@@ -57,7 +57,7 @@ class LojaView(View):
         )
 
         embed.add_field(
-            name="🟣 Verdugo — 400 pontos",
+            name="<:1477335499277602992:1541493231538274375> Verdugo — 400 pesetas",
             value=(
                 "• Garante **3 dias** de duração do cargo\n"
                 "• Acesso ao **chat geral do Licker**\n"
@@ -89,7 +89,7 @@ class LojaView(View):
         embed = discord.Embed(
             title="🤡 Loja de Pranks",
             description=(
-                "Use seus pontos para comprar brincadeiras "
+                "Use suas pesetas para comprar brincadeiras "
                 "e interações para zoar outros membros."
             ),
             color=COR_PRANKS
@@ -121,7 +121,7 @@ class CargosView(View):
 
     @discord.ui.button(
         label="Crimson Head",
-        emoji="🔴",
+        emoji="<:1477335586221199612:1541493141201227856>",
         style=discord.ButtonStyle.danger,
         custom_id="loja_crimson_head"
     )
@@ -131,13 +131,13 @@ class CargosView(View):
         button: Button
     ):
         embed = discord.Embed(
-            title="🔴 Crimson Head",
+            title="<:1477335586221199612:1541493141201227856> Crimson Head",
             color=COR_CRIMSON
         )
 
         embed.add_field(
             name="Preço",
-            value="200 pontos",
+            value="250 pesetas",
             inline=True
         )
 
@@ -166,7 +166,7 @@ class CargosView(View):
 
     @discord.ui.button(
         label="Verdugo",
-        emoji="🟣",
+        emoji="<:1477335499277602992:1541493231538274375>",
         style=discord.ButtonStyle.secondary,
         custom_id="loja_verdugo"
     )
@@ -176,13 +176,13 @@ class CargosView(View):
         button: Button
     ):
         embed = discord.Embed(
-            title="🟣 Verdugo",
+            title="<:1477335499277602992:1541493231538274375> Verdugo",
             color=COR_VERDUGO
         )
 
         embed.add_field(
             name="Preço",
-            value="400 pontos",
+            value="400 pesetas",
             inline=True
         )
 
@@ -271,9 +271,9 @@ class CrimsonHeadView(View):
 
             if result["error"] == "insufficient_points":
                 await interaction.response.send_message(
-                    f"❌ Você não possui pontos suficientes.\n\n"
-                    f"**Você tem:** {result['points']} pontos\n"
-                    f"**Necessário:** {result['cost']} pontos",
+                    f"❌ Você não possui pesetas suficientes.\n\n"
+                    f"**Você tem:** {result['points']} pesetas\n"
+                    f"**Necessário:** {result['cost']} pesetas",
                     ephemeral=True
                 )
                 return
@@ -319,7 +319,7 @@ class CrimsonHeadView(View):
             f"**Compra realizada com sucesso!**\n\n"
             f"Você recebeu o cargo **{role.name}**.\n"
             f"⏱️ Duração: **12 horas**\n"
-            f"💰 Pontos restantes: **{result['remaining_points']}**",
+            f"💰 pesetas restantes: **{result['remaining_points']}**",
             ephemeral=True
         )
 
@@ -370,23 +370,23 @@ class VerdugoView(View):
 
             if result["error"] == "user_not_found":
                 await interaction.response.send_message(
-                    "❌ Você ainda não possui uma conta registrada.",
+                    "<:654404secret:1540852720263626872> Você ainda não possui uma conta registrada.",
                     ephemeral=True
                 )
                 return
 
             if result["error"] == "item_not_found":
                 await interaction.response.send_message(
-                    "❌ Este item não está disponível na loja.",
+                    "<:11639rebeccasalute:1540797532354125975> Este item não está disponível na loja.",
                     ephemeral=True
                 )
                 return
 
             if result["error"] == "insufficient_points":
                 await interaction.response.send_message(
-                    f"❌ Você não possui pontos suficientes.\n\n"
-                    f"**Você tem:** {result['points']} pontos\n"
-                    f"**Necessário:** {result['cost']} pontos",
+                    f"❌ Você não possui pesetas suficientes.\n\n"
+                    f"**Você tem:** {result['points']} pesetas\n"
+                    f"**Necessário:** {result['cost']} pesetas",
                     ephemeral=True
                 )
                 return
@@ -432,7 +432,7 @@ class VerdugoView(View):
             f"**Compra realizada com sucesso!**\n\n"
             f"Você recebeu o cargo **{role.name}**.\n"
             f"⏱️ Duração: **3 dias**\n"
-            f"💰 Pontos restantes: **{result['remaining_points']}**",
+            f"💰 pesetas restantes: **{result['remaining_points']}**",
             ephemeral=True
         )
 
@@ -494,7 +494,7 @@ def criar_embed_loja() -> discord.Embed:
     )
 
     embed.add_field(
-        name="🔴 Crimson Head — 200 pontos",
+        name="<:1477335586221199612:1541493141201227856> Crimson Head — 200 pesetas",
         value=(
             "• Garante **12 horas** do cargo\n"
             "• Acesso ao **chat geral do Licker**\n"
@@ -504,7 +504,7 @@ def criar_embed_loja() -> discord.Embed:
     )
 
     embed.add_field(
-        name="🟣 Verdugo — 400 pontos",
+        name="<:1477335499277602992:1541493231538274375> Verdugo — 400 pesetas",
         value=(
             "• Garante **3 dias** do cargo\n"
             "• Acesso ao **chat geral do Licker**\n"
@@ -528,13 +528,13 @@ def criar_embed_cargos() -> discord.Embed:
     )
 
     embed.add_field(
-        name="🔴 Crimson Head — 200 pontos",
-        value="Duração: **12 horas**",
+        name="<:1477335586221199612:1541493141201227856> Crimson Head — 200 pesetas",
+        value="Duração: **24 horas**",
         inline=False
     )
 
     embed.add_field(
-        name="🟣 Verdugo — 400 pontos",
+        name="<:1477335499277602992:1541493231538274375> Verdugo — 400 pesetas",
         value="Duração: **3 dias**",
         inline=False
     )
