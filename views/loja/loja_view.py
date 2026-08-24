@@ -142,7 +142,7 @@ class CargosView(View):
 
         embed.add_field(
             name="Duração",
-            value="12 horas",
+            value="24 horas",
             inline=True
         )
 
@@ -316,7 +316,7 @@ class CrimsonHeadView(View):
             f"<:pesetasmediumPhotoroom:1541499172467908678>"
             f"**Compra realizada com sucesso!**\n\n"
             f"Você recebeu o cargo **{role.name}**.\n"
-            f"⏱️ Duração: **12 horas**\n"
+            f"⏱️ Duração: **24 horas**\n"
             f"💰 pesetas restantes: **{result['remaining_points']}**",
             ephemeral=True
         )
@@ -494,7 +494,7 @@ def criar_embed_loja() -> discord.Embed:
     embed.add_field(
         name="<:1477335586221199612:1541493141201227856> Crimson Head — 200 pesetas",
         value=(
-            "• Garante **12 horas** do cargo\n"
+            "• Garante **24 horas** do cargo\n"
             "• Acesso ao **chat geral do Licker**\n"
             "• Permissão para **transmitir no chat de rádio**"
         ),
