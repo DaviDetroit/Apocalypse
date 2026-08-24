@@ -1,12 +1,9 @@
 import os
 
 import aiomysql
-from dotenv import load_dotenv
 
 from utils.logger import setup_logger
 
-
-load_dotenv()
 
 logger = setup_logger()
 
@@ -46,7 +43,6 @@ async def close_database():
     if _pool is not None:
         _pool.close()
         await _pool.wait_closed()
-
         _pool = None
 
         logger.info("Pool MySQL encerrado")
