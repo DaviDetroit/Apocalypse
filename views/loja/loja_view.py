@@ -47,7 +47,7 @@ class LojaView(View):
         )
 
         embed.add_field(
-            name="<:1477335586221199612:1541493141201227856> Crimson Head — 200 pesetas",
+            name="<:1477335586221199612:1541493141201227856> Crimson Head — 250 pesetas",
             value=(
                 "• Garante **24 horas** de duração do cargo\n"
                 "• Acesso ao **chat geral do Licker**\n"
@@ -492,7 +492,7 @@ def criar_embed_loja() -> discord.Embed:
     )
 
     embed.add_field(
-        name="<:1477335586221199612:1541493141201227856> Crimson Head — 200 pesetas",
+        name="<:1477335586221199612:1541493141201227856> Crimson Head — 250 pesetas",
         value=(
             "• Garante **24 horas** do cargo\n"
             "• Acesso ao **chat geral do Licker**\n"
@@ -525,7 +525,7 @@ def criar_embed_cargos() -> discord.Embed:
     )
 
     embed.add_field(
-        name="<:1477335586221199612:1541493141201227856> Crimson Head — 200 pesetas",
+        name="<:1477335586221199612:1541493141201227856> Crimson Head — 250 pesetas",
         value="Duração: **24 horas**",
         inline=False
     )
