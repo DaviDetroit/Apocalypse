@@ -4,6 +4,20 @@ from discord.ui import View, Button
 from utils.logger import setup_logger
 
 
+COR_PADRAO = discord.Color.dark_red()
+COR_CARGOS = discord.Color.blurple()
+COR_PRANKS = discord.Color.orange()
+COR_CRIMSON = discord.Color.from_rgb(220, 20, 60)
+COR_VERDUGO = discord.Color.purple()
+
+# Footer padrão (só texto, sem ícone)
+FOOTER_TEXT = "Loja do Licker"
+
+
+def aplicar_padrao(embed: discord.Embed) -> discord.Embed:
+    embed.set_footer(text=FOOTER_TEXT)
+    return embed
+
 
 class LojaView(View):
     def __init__(self):
@@ -20,15 +34,16 @@ class LojaView(View):
         interaction: discord.Interaction,
         button: Button
     ):
-        await interaction.response.edit_message(
-            content=(
-                "## <:8681shoppmx:1541450494382448831> Loja de Cargos\n\n"
-                "Compre cargos especiais usando seus pontos.\n\n"
-                "🔴 **Crimson Head** — 200 pontos\n"
-                "🟣 **Verdugo** — 400 pontos"
-            ),
-            view=CargosView()
+        embed = discord.Embed(
+            title="<:8681shoppmx:1541450494382448831> Loja de Cargos",
+            description="Compre cargos especiais usando seus pontos.",
+            color=COR_CARGOS
         )
+        embed.add_field(name="🔴 Crimson Head", value="200 pontos", inline=True)
+        embed.add_field(name="🟣 Verdugo", value="400 pontos", inline=True)
+        aplicar_padrao(embed)
+
+        await interaction.response.edit_message(content=None, embed=embed, view=CargosView())
 
     @discord.ui.button(
         label="Pranks",
@@ -41,15 +56,19 @@ class LojaView(View):
         interaction: discord.Interaction,
         button: Button
     ):
-        await interaction.response.edit_message(
-            content=(
-                "## 🤡 Loja de Pranks\n\n"
+        embed = discord.Embed(
+            title="🤡 Loja de Pranks",
+            description=(
                 "Use seus pontos para comprar brincadeiras "
-                "e interações para zoar outros membros.\n\n"
-                "🔇 **Em breve...**"
+                "e interações para zoar outros membros."
             ),
-            view=PranksView()
+            color=COR_PRANKS
         )
+        embed.add_field(name="🔇 Em breve...", value="\u200b", inline=False)
+        aplicar_padrao(embed)
+
+        await interaction.response.edit_message(content=None, embed=embed, view=PranksView())
+
 
 class CargosView(View):
     def __init__(self):
@@ -66,17 +85,23 @@ class CargosView(View):
         interaction: discord.Interaction,
         button: Button
     ):
-        await interaction.response.edit_message(
-            content=(
-                "## 🔵 Crimson Head\n\n"
-                "**Preço:** 200 pontos\n"
-                "**Duração:** 12 horas\n\n"
-                "**Vantagens:**\n"
-                "• 🩸 Acesso ao **chat geral do Licker**;\n"
-                "• 📻 Permissão para **transmitir no chat de rádio**."
-            ),
-            view=CrimsonHeadView()
+        embed = discord.Embed(
+            title="🔵 Crimson Head",
+            color=COR_CRIMSON
         )
+        embed.add_field(name="Preço", value="200 pontos", inline=True)
+        embed.add_field(name="Duração", value="12 horas", inline=True)
+        embed.add_field(
+            name="Vantagens",
+            value=(
+                "🩸 Acesso ao **chat geral do Licker**\n"
+                "📻 Permissão para **transmitir no chat de rádio**"
+            ),
+            inline=False
+        )
+        aplicar_padrao(embed)
+
+        await interaction.response.edit_message(content=None, embed=embed, view=CrimsonHeadView())
 
     @discord.ui.button(
         label="Verdugo",
@@ -89,18 +114,24 @@ class CargosView(View):
         interaction: discord.Interaction,
         button: Button
     ):
-        await interaction.response.edit_message(
-            content=(
-                "## 🟣 Verdugo\n\n"
-                "**Preço:** 400 pontos\n"
-                "**Duração:** 3 dias\n\n"
-                "**Vantagens:**\n"
-                "• 🩸 Acesso ao **chat geral do Licker**;\n"
-                "• 📻 Permissão para **transmitir no chat de rádio**;\n"
-                "• 🎤 Permissão para **usar o microfone no chat de músicas**."
-            ),
-            view=VerdugoView()
+        embed = discord.Embed(
+            title="🟣 Verdugo",
+            color=COR_VERDUGO
         )
+        embed.add_field(name="Preço", value="400 pontos", inline=True)
+        embed.add_field(name="Duração", value="3 dias", inline=True)
+        embed.add_field(
+            name="Vantagens",
+            value=(
+                "🩸 Acesso ao **chat geral do Licker**\n"
+                "📻 Permissão para **transmitir no chat de rádio**\n"
+                "🎤 Permissão para **usar o microfone no chat de músicas**"
+            ),
+            inline=False
+        )
+        aplicar_padrao(embed)
+
+        await interaction.response.edit_message(content=None, embed=embed, view=VerdugoView())
 
     @discord.ui.button(
         label="Voltar",
@@ -113,14 +144,14 @@ class CargosView(View):
         interaction: discord.Interaction,
         button: Button
     ):
-        await interaction.response.edit_message(
-            content=(
-                "## <:8681shoppmx:1541450494382448831> Loja do Licker\n\n"
-                "**Cargo especial para...**\n\n"
-                "Escolha um dos cargos abaixo ou confira nossas brincadeiras."
-            ),
-            view=LojaView()
+        embed = discord.Embed(
+            title="<:8681shoppmx:1541450494382448831> Loja do Licker",
+            description="**Cargo especial para...**\n\nEscolha um dos cargos abaixo ou confira nossas brincadeiras.",
+            color=COR_PADRAO
         )
+        aplicar_padrao(embed)
+
+        await interaction.response.edit_message(content=None, embed=embed, view=LojaView())
 
 
 class CrimsonHeadView(View):
@@ -129,7 +160,7 @@ class CrimsonHeadView(View):
 
     @discord.ui.button(
         label="Comprar",
-        emoji="<a:855247doginaldollar:1541451321549258792>",
+        emoji="<:532883cash:1541463231699226695>",
         style=discord.ButtonStyle.success,
         custom_id="comprar_crimson_head"
     )
@@ -154,10 +185,16 @@ class CrimsonHeadView(View):
         interaction: discord.Interaction,
         button: Button
     ):
-        await interaction.response.edit_message(
-            content="## <:8681shoppmx:1541450494382448831> Loja de Cargos\n\nEscolha um cargo:",
-            view=CargosView()
+        embed = discord.Embed(
+            title="<:8681shoppmx:1541450494382448831> Loja de Cargos",
+            description="Escolha um cargo:",
+            color=COR_CARGOS
         )
+        embed.add_field(name="🔴 Crimson Head", value="200 pontos", inline=True)
+        embed.add_field(name="🟣 Verdugo", value="400 pontos", inline=True)
+        aplicar_padrao(embed)
+
+        await interaction.response.edit_message(content=None, embed=embed, view=CargosView())
 
 
 class VerdugoView(View):
@@ -166,7 +203,7 @@ class VerdugoView(View):
 
     @discord.ui.button(
         label="Comprar",
-        emoji="<a:855247doginaldollar:1541451321549258792>",
+        emoji="<:532883cash:1541463231699226695>",
         style=discord.ButtonStyle.success,
         custom_id="comprar_verdugo"
     )
@@ -176,7 +213,7 @@ class VerdugoView(View):
         button: Button
     ):
         await interaction.response.send_message(
-            "<a:855247doginaldollar:1541451321549258792> O sistema de compra será implementado na próxima etapa.",
+            "<:532883cash:1541463231699226695> O sistema de compra será implementado na próxima etapa.",
             ephemeral=True
         )
 
@@ -191,10 +228,16 @@ class VerdugoView(View):
         interaction: discord.Interaction,
         button: Button
     ):
-        await interaction.response.edit_message(
-            content="## <a:855247doginaldollar:1541451321549258792> Loja de Cargos\n\nEscolha um cargo:",
-            view=CargosView()
+        embed = discord.Embed(
+            title="<:8681shoppmx:1541450494382448831> Loja de Cargos",
+            description="Escolha um cargo:",
+            color=COR_CARGOS
         )
+        embed.add_field(name="🔴 Crimson Head", value="200 pontos", inline=True)
+        embed.add_field(name="🟣 Verdugo", value="400 pontos", inline=True)
+        aplicar_padrao(embed)
+
+        await interaction.response.edit_message(content=None, embed=embed, view=CargosView())
 
 
 class PranksView(View):
@@ -212,11 +255,11 @@ class PranksView(View):
         interaction: discord.Interaction,
         button: Button
     ):
-        await interaction.response.edit_message(
-            content=(
-                "## <:8681shoppmx:1541450494382448831> Loja do Licker\n\n"
-                "**Cargo especial para...**\n\n"
-                "Escolha uma categoria abaixo."
-            ),
-            view=LojaView()
+        embed = discord.Embed(
+            title="<:8681shoppmx:1541450494382448831> Loja do Licker",
+            description="**Cargo especial para...**\n\nEscolha uma categoria abaixo.",
+            color=COR_PADRAO
         )
+        aplicar_padrao(embed)
+
+        await interaction.response.edit_message(content=None, embed=embed, view=LojaView())
