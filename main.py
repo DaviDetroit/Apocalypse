@@ -29,10 +29,15 @@ bot = commands.Bot(
 
 @bot.event
 async def on_ready():
+    synced = await bot.tree.sync()
 
     logger.info(
         "Bot conectado como %s",
         bot.user
+    )
+    logger.info(
+        "Slash commands sincronizados: %s",
+        len(synced)
     )
 
 
