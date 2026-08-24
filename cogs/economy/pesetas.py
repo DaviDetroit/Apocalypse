@@ -5,7 +5,7 @@ from discord.ext import commands
 from database.connection import get_pool
 
 
-class Pepetas(commands.Cog):
+class Pesetas(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -59,4 +59,4 @@ class Pepetas(commands.Cog):
 
 
 async def setup(bot):
-    await bot.add_cog(Pepetas(bot))
+    await bot.add_cog(Pesetas(bot))
