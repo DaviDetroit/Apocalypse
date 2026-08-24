@@ -17,18 +17,6 @@ from config.constants import (
 )
 
 logger = setup_logger()
-
-<<<<<<< HEAD
-#emoji
-CLIPES_JOGOS = 1427044546973405184
-EMOJI = "<:1280pxUmbrella_Corporation_logo:1540878040354000966>"
-
-POINTS_PER_EVALUATION = 20
-DAILY_REWARD_MILESTONE = 5
-
-=======
->>>>>>> dev
-
 class ReactionEvents(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
