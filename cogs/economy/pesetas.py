@@ -11,10 +11,10 @@ class Pesetas(commands.Cog):
         self.bot = bot
 
     @app_commands.command(
-        name="pepetas",
-        description="Veja quantas Pepetas você possui."
+        name="pesetas",
+        description="Veja quantas Pesetas você possui."
     )
-    async def pepetas(self, interaction: discord.Interaction):
+    async def pesetas(self, interaction: discord.Interaction):
 
         pool = get_pool()
 
@@ -42,9 +42,9 @@ class Pesetas(commands.Cog):
         points = result[0]
 
         embed = discord.Embed(
-            title="🧟 Pepetas",
+            title="🧟 Pesetas",
             description=(
-                f"Você possui **{points:,} Pepetas**."
+                f"Você possui **{points:,} Pesetas**."
             ).replace(",", "."),
             color=discord.Color.dark_red()
         )

@@ -77,12 +77,28 @@ class TransferirPesetas(commands.Cog):
             )
             return
 
-        await interaction.response.send_message(
-            f"<:pesetasmediumPhotoroom:1541499172467908678> **Transferência realizada!**\n\n"
-            f"<:778612sigmaleonkennedy:1540797776038989884> Destinatário: {usuario.mention}\n"
-            f"💸 Valor: **{quantidade:,} Pesetas**"
-            .replace(",", ".")
+        embed = discord.Embed(
+            title=(
+                "<:pesetasmediumPhotoroom:1541499172467908678> "
+                "Transferência realizada!"
+            ),
+            color=discord.Color.green()
         )
+        embed.add_field(
+            name=(
+                "<:778612sigmaleonkennedy:1540797776038989884> "
+                "Destinatário"
+            ),
+            value=usuario.mention,
+            inline=False
+        )
+        embed.add_field(
+            name="💸 Valor",
+            value=f"**{quantidade:,} Pesetas**".replace(",", "."),
+            inline=False
+        )
+
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(bot):
