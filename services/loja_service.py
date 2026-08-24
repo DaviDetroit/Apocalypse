@@ -25,15 +25,17 @@ class LojaService:
 
                 result = await cursor.fetchone()
 
-                while await cursor.nextset():
-                    pass
-
                 if not result:
+                    while await cursor.nextset():
+                        pass
+
                     return {
                         "success": False,
                         "error": "unknown_error"
                     }
 
+                # IMPORTANTE:
+                # Pegamos description ANTES de chamar nextset()
                 columns = [
                     column[0]
                     for column in cursor.description
@@ -42,6 +44,10 @@ class LojaService:
                 result = dict(
                     zip(columns, result)
                 )
+
+                # Agora podemos limpar os result sets restantes
+                while await cursor.nextset():
+                    pass
 
                 if result["result"] == "USER_NOT_FOUND":
                     return {
@@ -72,23 +78,13 @@ class LojaService:
                 if result["result"] == "SUCCESS":
                     return {
                         "success": True,
-
                         "user_id": result["user_id"],
-
-                        # ID interno da tabela roles
                         "role_id": result["role_id"],
-
-                        # ID REAL do cargo no Discord
                         "discord_role_id": result["discord_role_id"],
-
                         "item_name": result["item_name"],
-
                         "points_cost": result["points_cost"],
-
                         "duration_seconds": result["duration_seconds"],
-
                         "expires_at": result["expires_at"],
-
                         "remaining_points": result["remaining_points"]
                     }
 
