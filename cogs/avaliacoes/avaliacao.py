@@ -13,13 +13,6 @@ from config.constants import (
 logger = setup_logger()
 
 #Canal
-<<<<<<< HEAD
-CLIPES_JOGOS = 1427044546973405184
-
-EMOJI = "<:1280pxUmbrella_Corporation_logo:1540878040354000966>"
-
-=======
->>>>>>> dev
 URL_REGEX = re.compile(r"https?://[^\s<>]+")
 
 VIDEO_EXTENSIONS = (
