@@ -59,10 +59,9 @@ class LojaView(View):
         embed.add_field(
             name="<:1477335499277602992:1541493231538274375> Verdugo — 400 pesetas",
             value=(
-                "• Garante **3 dias** de duração do cargo\n"
+                "• Garante **2 dias** de duração do cargo\n"
                 "• Acesso ao **chat geral do Licker**\n"
-                "• Permissão para **transmitir no chat de rádio**\n"
-                "• Permissão para **usar o microfone no chat de músicas**"
+                "• Permissão para **transmitir no chat de rádio**"
             ),
             inline=False
         )
@@ -188,7 +187,7 @@ class CargosView(View):
 
         embed.add_field(
             name="Duração",
-            value="3 dias",
+            value="2 dias",
             inline=True
         )
 
@@ -197,7 +196,6 @@ class CargosView(View):
             value=(
                 "🩸 Acesso ao **chat geral do Licker**\n"
                 "📻 Permissão para **transmitir no chat de rádio**\n"
-                "🎤 Permissão para **usar o microfone no chat de músicas**"
             ),
             inline=False
         )
@@ -431,7 +429,7 @@ class VerdugoView(View):
             f"<:pesetasmediumPhotoroom:1541499172467908678>"
             f"**Compra realizada com sucesso!**\n\n"
             f"Você recebeu o cargo **{role.name}**.\n"
-            f"⏱️ Duração: **3 dias**\n"
+            f"⏱️ Duração: **2 dias**\n"
             f"💰 pesetas restantes: **{result['remaining_points']}**",
             ephemeral=True
         )
@@ -506,10 +504,9 @@ def criar_embed_loja() -> discord.Embed:
     embed.add_field(
         name="<:1477335499277602992:1541493231538274375> Verdugo — 400 pesetas",
         value=(
-            "• Garante **3 dias** do cargo\n"
+            "• Garante **2 dias** do cargo\n"
             "• Acesso ao **chat geral do Licker**\n"
-            "• Permissão para **transmitir no chat de rádio**\n"
-            "• Permissão para **usar o microfone no chat de músicas**"
+            "• Permissão para **transmitir no chat de rádio**"
         ),
         inline=False
     )
@@ -535,7 +532,7 @@ def criar_embed_cargos() -> discord.Embed:
 
     embed.add_field(
         name="<:1477335499277602992:1541493231538274375> Verdugo — 400 pesetas",
-        value="Duração: **3 dias**",
+        value="Duração: **2 dias**",
         inline=False
     )
 
