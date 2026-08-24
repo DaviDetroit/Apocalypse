@@ -2,7 +2,7 @@ import discord
 
 from discord.ui import View, Button
 
-from services.loja import LojaService
+from services.loja_service import LojaService
 
 
 COR_PADRAO = discord.Color.dark_red()
@@ -248,10 +248,79 @@ class CrimsonHeadView(View):
         interaction: discord.Interaction,
         button: Button
     ):
-        await processar_compra(
-            interaction=interaction,
-            store_item_id=1,
-            nome_item="Crimson Head"
+        result = await LojaService.comprar_item(
+            discord_id=interaction.user.id,
+            store_item_id=1
+        )
+
+        if not result["success"]:
+
+            if result["error"] == "user_not_found":
+                await interaction.response.send_message(
+                    "❌ Você ainda não possui uma conta registrada.",
+                    ephemeral=True
+                )
+                return
+
+            if result["error"] == "item_not_found":
+                await interaction.response.send_message(
+                    "❌ Este item não está disponível na loja.",
+                    ephemeral=True
+                )
+                return
+
+            if result["error"] == "insufficient_points":
+                await interaction.response.send_message(
+                    f"❌ Você não possui pontos suficientes.\n\n"
+                    f"**Você tem:** {result['points']} pontos\n"
+                    f"**Necessário:** {result['cost']} pontos",
+                    ephemeral=True
+                )
+                return
+
+            if result["error"] == "already_owned":
+                await interaction.response.send_message(
+                    "❌ Você já possui este cargo temporário.",
+                    ephemeral=True
+                )
+                return
+
+            await interaction.response.send_message(
+                "❌ Não foi possível realizar a compra.",
+                ephemeral=True
+            )
+            return
+
+        # Compra aprovada pelo banco
+        role = interaction.guild.get_role(
+            int(result["discord_role_id"])
+        )
+
+        if role is None:
+            await interaction.response.send_message(
+                "⚠️ A compra foi registrada, mas não consegui encontrar "
+                "o cargo no servidor. Avise a administração.",
+                ephemeral=True
+            )
+            return
+
+        try:
+            await interaction.user.add_roles(role)
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                "⚠️ A compra foi registrada, mas não tenho permissão "
+                "para adicionar este cargo.",
+                ephemeral=True
+            )
+            return
+
+        await interaction.response.send_message(
+            f"<:532883cash:1541463231699226695> "
+            f"**Compra realizada com sucesso!**\n\n"
+            f"Você recebeu o cargo **{role.name}**.\n"
+            f"⏱️ Duração: **12 horas**\n"
+            f"💰 Pontos restantes: **{result['remaining_points']}**",
+            ephemeral=True
         )
 
     @discord.ui.button(
@@ -292,10 +361,79 @@ class VerdugoView(View):
         interaction: discord.Interaction,
         button: Button
     ):
-        await processar_compra(
-            interaction=interaction,
-            store_item_id=2,
-            nome_item="Verdugo"
+        result = await LojaService.comprar_item(
+            discord_id=interaction.user.id,
+            store_item_id=2
+        )
+
+        if not result["success"]:
+
+            if result["error"] == "user_not_found":
+                await interaction.response.send_message(
+                    "❌ Você ainda não possui uma conta registrada.",
+                    ephemeral=True
+                )
+                return
+
+            if result["error"] == "item_not_found":
+                await interaction.response.send_message(
+                    "❌ Este item não está disponível na loja.",
+                    ephemeral=True
+                )
+                return
+
+            if result["error"] == "insufficient_points":
+                await interaction.response.send_message(
+                    f"❌ Você não possui pontos suficientes.\n\n"
+                    f"**Você tem:** {result['points']} pontos\n"
+                    f"**Necessário:** {result['cost']} pontos",
+                    ephemeral=True
+                )
+                return
+
+            if result["error"] == "already_owned":
+                await interaction.response.send_message(
+                    "❌ Você já possui este cargo temporário.",
+                    ephemeral=True
+                )
+                return
+
+            await interaction.response.send_message(
+                "❌ Não foi possível realizar a compra.",
+                ephemeral=True
+            )
+            return
+
+        # Compra aprovada pelo banco
+        role = interaction.guild.get_role(
+            int(result["discord_role_id"])
+        )
+
+        if role is None:
+            await interaction.response.send_message(
+                "⚠️ A compra foi registrada, mas não consegui encontrar "
+                "o cargo no servidor. Avise a administração.",
+                ephemeral=True
+            )
+            return
+
+        try:
+            await interaction.user.add_roles(role)
+        except discord.Forbidden:
+            await interaction.response.send_message(
+                "⚠️ A compra foi registrada, mas não tenho permissão "
+                "para adicionar este cargo.",
+                ephemeral=True
+            )
+            return
+
+        await interaction.response.send_message(
+            f"<:532883cash:1541463231699226695> "
+            f"**Compra realizada com sucesso!**\n\n"
+            f"Você recebeu o cargo **{role.name}**.\n"
+            f"⏱️ Duração: **3 dias**\n"
+            f"💰 Pontos restantes: **{result['remaining_points']}**",
+            ephemeral=True
         )
 
     @discord.ui.button(
@@ -404,159 +542,6 @@ def criar_embed_cargos() -> discord.Embed:
     aplicar_padrao(embed)
 
     return embed
-
-
-# ============================================================
-# PROCESSAMENTO DA COMPRA
-# ============================================================
-
-async def processar_compra(
-    interaction: discord.Interaction,
-    store_item_id: int,
-    nome_item: str
-):
-
-    # Evita que o usuário fique esperando sem resposta
-    await interaction.response.defer(ephemeral=True)
-
-    try:
-
-        resultado = await LojaService.comprar_item(
-            discord_id=interaction.user.id,
-            store_item_id=store_item_id
-        )
-
-    except Exception as error:
-
-        print(
-            f"Erro ao comprar {nome_item}: {error}"
-        )
-
-        await interaction.followup.send(
-            "❌ Ocorreu um erro ao processar sua compra.",
-            ephemeral=True
-        )
-
-        return
-
-    # ========================================================
-    # ERROS
-    # ========================================================
-
-    if not resultado["success"]:
-
-        if resultado["error"] == "user_not_found":
-
-            mensagem = (
-                "❌ Você ainda não possui uma conta registrada "
-                "no sistema de economia."
-            )
-
-        elif resultado["error"] == "item_not_found":
-
-            mensagem = (
-                "❌ Este item não está disponível na loja."
-            )
-
-        elif resultado["error"] == "insufficient_points":
-
-            mensagem = (
-                "❌ Você não possui pontos suficientes.\n\n"
-                f"💰 Seus pontos: **{resultado['points']}**\n"
-                f"💵 Preço: **{resultado['cost']}**"
-            )
-
-        elif resultado["error"] == "already_owned":
-
-            mensagem = (
-                f"❌ Você já possui o cargo **{nome_item}** "
-                "ativo."
-            )
-
-        else:
-
-            mensagem = (
-                "❌ Não foi possível realizar a compra."
-            )
-
-        await interaction.followup.send(
-            mensagem,
-            ephemeral=True
-        )
-
-        return
-
-    # ========================================================
-    # SUCESSO
-    # ========================================================
-
-    discord_role_id = resultado.get("discord_role_id")
-
-    if not discord_role_id:
-
-        await interaction.followup.send(
-            "⚠️ A compra foi registrada, mas não consegui "
-            "identificar o cargo no Discord. Avise um administrador.",
-            ephemeral=True
-        )
-
-        return
-
-    role = interaction.guild.get_role(
-        int(discord_role_id)
-    )
-
-    if role is None:
-
-        await interaction.followup.send(
-            "⚠️ A compra foi registrada, mas o cargo não foi "
-            "encontrado no servidor. Avise um administrador.",
-            ephemeral=True
-        )
-
-        return
-
-    try:
-
-        await interaction.user.add_roles(
-            role,
-            reason=f"Compra na loja: {nome_item}"
-        )
-
-    except discord.Forbidden:
-
-        await interaction.followup.send(
-            "⚠️ A compra foi registrada, mas o bot não possui "
-            "permissão para adicionar esse cargo.",
-            ephemeral=True
-        )
-
-        return
-
-    except discord.HTTPException:
-
-        await interaction.followup.send(
-            "⚠️ A compra foi registrada, mas ocorreu um erro "
-            "ao adicionar o cargo.",
-            ephemeral=True
-        )
-
-        return
-
-   
-
-    pontos_restantes = resultado["remaining_points"]
-
-    await interaction.followup.send(
-        (
-            "<:532883cash:1541463231699226695> "
-            f"**Compra realizada com sucesso!**\n\n"
-            f"🩸 Cargo: **{nome_item}**\n"
-            f"⏱️ Duração: **{formatar_duracao(resultado['duration_seconds'])}**\n"
-            f"💰 Pontos restantes: **{pontos_restantes}**"
-        ),
-        ephemeral=True
-    )
 
 
 def formatar_duracao(segundos: int) -> str:
