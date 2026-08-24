@@ -239,7 +239,7 @@ class CrimsonHeadView(View):
 
     @discord.ui.button(
         label="Comprar",
-        emoji="<:532883cash:1541463231699226695>",
+        emoji="<:pesetasmediumPhotoroom:1541499172467908678>",
         style=discord.ButtonStyle.success,
         custom_id="comprar_crimson_head"
     )
@@ -315,7 +315,7 @@ class CrimsonHeadView(View):
             return
 
         await interaction.response.send_message(
-            f"<:532883cash:1541463231699226695> "
+            f"<:pesetasmediumPhotoroom:1541499172467908678>"
             f"**Compra realizada com sucesso!**\n\n"
             f"Você recebeu o cargo **{role.name}**.\n"
             f"⏱️ Duração: **12 horas**\n"
@@ -352,7 +352,7 @@ class VerdugoView(View):
 
     @discord.ui.button(
         label="Comprar",
-        emoji="<:532883cash:1541463231699226695>",
+        emoji="<:pesetasmediumPhotoroom:1541499172467908678>",
         style=discord.ButtonStyle.success,
         custom_id="comprar_verdugo"
     )
@@ -428,7 +428,7 @@ class VerdugoView(View):
             return
 
         await interaction.response.send_message(
-            f"<:532883cash:1541463231699226695> "
+            f"<:pesetasmediumPhotoroom:1541499172467908678>"
             f"**Compra realizada com sucesso!**\n\n"
             f"Você recebeu o cargo **{role.name}**.\n"
             f"⏱️ Duração: **3 dias**\n"
