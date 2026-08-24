@@ -15,7 +15,7 @@ async def init_database():
 
     _pool = await aiomysql.create_pool(
         host=os.getenv("DB_HOST"),
-        port=int(os.getenv("DB_PORT")),
+        port=int(os.getenv("DB_PORT", "3306")),
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
         db=os.getenv("DB_NAME"),
@@ -30,7 +30,9 @@ async def init_database():
 
 def get_pool():
     if _pool is None:
-        raise RuntimeError("Pool do MySQL ainda não foi inicializado.")
+        raise RuntimeError(
+            "Pool do MySQL ainda não foi inicializado."
+        )
 
     return _pool
 
@@ -41,7 +43,6 @@ async def close_database():
     if _pool is not None:
         _pool.close()
         await _pool.wait_closed()
-
         _pool = None
 
         logger.info("Pool MySQL encerrado")

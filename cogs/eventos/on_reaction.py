@@ -8,10 +8,17 @@ from database.evaluations import (
 )
 
 from utils.logger import setup_logger
-
+#Configuração de canal
+from config.constants import (
+    CLIPES_JOGOS,
+    EMOJI_AVALIACAO,
+    POINTS_PER_EVALUATION,
+    DAILY_REWARD_MILESTONE,
+)
 
 logger = setup_logger()
 
+<<<<<<< HEAD
 #emoji
 CLIPES_JOGOS = 1427044546973405184
 EMOJI = "<:1280pxUmbrella_Corporation_logo:1540878040354000966>"
@@ -19,6 +26,8 @@ EMOJI = "<:1280pxUmbrella_Corporation_logo:1540878040354000966>"
 POINTS_PER_EVALUATION = 20
 DAILY_REWARD_MILESTONE = 5
 
+=======
+>>>>>>> dev
 
 class ReactionEvents(commands.Cog):
 
@@ -38,7 +47,7 @@ class ReactionEvents(commands.Cog):
         if payload.channel_id != CLIPES_JOGOS:
             return
 
-        if str(payload.emoji) != EMOJI:
+        if str(payload.emoji) != EMOJI_AVALIACAO:
             return
 
         evaluator_id = payload.user_id

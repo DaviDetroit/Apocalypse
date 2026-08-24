@@ -5,15 +5,21 @@ import discord
 from discord.ext import commands
 
 from utils.logger import setup_logger
-
+from config.constants import (
+    CLIPES_JOGOS,
+    EMOJI_AVALIACAO,
+)
 
 logger = setup_logger()
 
 #Canal
+<<<<<<< HEAD
 CLIPES_JOGOS = 1427044546973405184
 
 EMOJI = "<:1280pxUmbrella_Corporation_logo:1540878040354000966>"
 
+=======
+>>>>>>> dev
 URL_REGEX = re.compile(r"https?://[^\s<>]+")
 
 VIDEO_EXTENSIONS = (
@@ -53,7 +59,7 @@ class Avaliacao(commands.Cog):
 
         try:
 
-            await message.add_reaction(EMOJI)
+            await message.add_reaction(EMOJI_AVALIACAO)
 
             logger.info(
                 "Avaliação disponível | "
