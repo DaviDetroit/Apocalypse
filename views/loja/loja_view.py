@@ -43,7 +43,7 @@ class LojaView(View):
         embed.add_field(
             name="<:crimsonhead:SEU_EMOJI_ID> Crimson Head — 200 pontos",
             value=(
-                "• Garante **12 horas** de duração do cargo\n"
+                "• Garante **24 horas** de duração do cargo\n"
                 "• Acesso ao **chat geral do Licker**\n"
                 "• Permissão para **transmitir no chat de rádio**"
             ),
