@@ -32,29 +32,36 @@ class Pet(commands.Cog):
         if not (attachment.content_type or "").startswith("image/"):
             return
 
+        # Baixa a imagem do Discord
+        image = await attachment.to_file(
+            filename=attachment.filename
+        )
 
         embed = discord.Embed(
             title=f"🐾 Pet de {message.author.name}"
         )
 
+        # A imagem será anexada na mensagem do bot
         embed.set_image(
-            url=attachment.url
+            url=f"attachment://{attachment.filename}"
         )
 
-
+        # Envia a nova mensagem
         pet_message = await message.channel.send(
             embed=embed,
+            file=image,
             view=PetLikeView()
         )
 
+        image_url = pet_message.attachments[0].url
 
         await PetService.criar_pet(
             pet_message.id,
             message.author.id,
-            attachment.url
+            image_url
         )
 
-
+        # Apaga a mensagem original
         await message.delete()
 
 
