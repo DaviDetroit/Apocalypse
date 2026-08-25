@@ -70,6 +70,12 @@ class PetService:
 
                 owner_id = pet[0]
 
+                if str(owner_id) == str(discord_user_id):
+                    return {
+                        "success": False,
+                        "error": "own_pet"
+                    }
+
 
                 # Verifica se já deu like
                 await cursor.execute(

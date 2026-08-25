@@ -28,6 +28,13 @@ class PetLikeView(discord.ui.View):
 
         if not result["success"]:
 
+            if result["error"] == "own_pet":
+                await interaction.response.send_message(
+                    "❌ Você não pode dar like no próprio pet.",
+                    ephemeral=True
+                )
+                return
+
             if result["error"] == "already_liked":
                 await interaction.response.send_message(
                     "❤️ Você já curtiu este pet.",
@@ -50,6 +57,6 @@ class PetLikeView(discord.ui.View):
 
         await interaction.response.send_message(
             f"❤️ Você curtiu este pet!\n"
-            f"💰 Você ganhou **{result['points']} pesetas**.",
+            f"<:pesetasmediumPhotoroom:1541499172467908678> Você ganhou **{result['points']} pesetas**.",
             ephemeral=True
         )
