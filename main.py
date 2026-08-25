@@ -10,6 +10,7 @@ from database.connection import (
 )
 
 from utils.logger import setup_logger
+from cogs.pets.pet_view import PetLikeView
 
 
 logger = setup_logger()
@@ -25,6 +26,7 @@ bot = commands.Bot(
     command_prefix="!",
     intents=intents,
 )
+bot.add_view(PetLikeView())
 
 
 @bot.event
