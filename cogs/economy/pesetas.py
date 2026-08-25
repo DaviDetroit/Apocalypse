@@ -23,9 +23,10 @@ class Pesetas(commands.Cog):
     ):
 
         # Evita expirar a interação
-        await interaction.response.defer(
-            ephemeral=True
-        )
+        try:
+            await interaction.response.defer(ephemeral=True)
+        except discord.NotFound:
+            return
 
         pool = get_pool()
 
