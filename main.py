@@ -12,12 +12,12 @@ from database.connection import (
 from utils.logger import setup_logger
 
 
+
 logger = setup_logger()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 intents = discord.Intents.default()
-
 intents.message_content = True
 intents.members = True
 
@@ -27,14 +27,16 @@ bot = commands.Bot(
 )
 
 
+
 @bot.event
 async def on_ready():
     synced = await bot.tree.sync()
 
     logger.info(
-        "Bot conectado como %s",
+        "Bot conectado como %s 🧟‍♂️",
         bot.user
     )
+
     logger.info(
         "Slash commands sincronizados: %s",
         len(synced)
@@ -47,7 +49,12 @@ async def load_cogs():
 
         for file in files:
 
+            # Ignora arquivos que não são Python
             if not file.endswith(".py"):
+                continue
+
+            # Views não são Cogs
+            if file.endswith("_view.py"):
                 continue
 
             module = os.path.join(root, file)
