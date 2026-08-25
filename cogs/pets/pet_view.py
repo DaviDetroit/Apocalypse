@@ -5,45 +5,42 @@ from services.pet_service import PetService
 
 class PetLikeView(discord.ui.View):
 
-    def __init__(self):
+    def __init__(self, pet_id: int):
         super().__init__(timeout=None)
 
+        self.pet_id = pet_id
 
     @discord.ui.button(
         label="Curtir",
         emoji="❤️",
         style=discord.ButtonStyle.primary,
-        custom_id="pet_like_button"
+        custom_id="pet_like"
     )
     async def like(
         self,
         interaction: discord.Interaction,
         button: discord.ui.Button
     ):
-
         result = await PetService.dar_like(
-            interaction.message.id,
-            interaction.user.id
+            pet_id=self.pet_id,
+            discord_user_id=interaction.user.id
         )
-
 
         if not result["success"]:
 
             if result["error"] == "already_liked":
                 await interaction.response.send_message(
-                    "❌ Você já curtiu esse pet.",
+                    "❤️ Você já curtiu este pet.",
                     ephemeral=True
                 )
                 return
-
 
             if result["error"] == "pet_not_found":
                 await interaction.response.send_message(
-                    "❌ Esse pet não existe mais.",
+                    "❌ Este pet não está mais disponível.",
                     ephemeral=True
                 )
                 return
-
 
             await interaction.response.send_message(
                 "❌ Não foi possível registrar o like.",
@@ -51,25 +48,8 @@ class PetLikeView(discord.ui.View):
             )
             return
 
-
-        # envia DM para o dono do pet
-        try:
-            owner = await interaction.client.fetch_user(
-                int(result["owner_id"])
-            )
-
-            await owner.send(
-                f"❤️ **{interaction.user.name}** deu like no seu pet!\n\n"
-                f"<:pesetasmediumPhotoroom:1541499172467908678> Você ganhou **{result['reward']} pesetas**.\n"
-                f"Use `/pesetas` para ver seu saldo."
-            )
-
-        except discord.Forbidden:
-            pass
-
-
         await interaction.response.send_message(
-            f"<:whiskers:1541503209565200445> Like registrado!\n"
-            f"Você deu **+1 like** nesse pet.",
+            f"❤️ Você curtiu este pet!\n"
+            f"💰 Você ganhou **{result['points']} pesetas**.",
             ephemeral=True
         )
