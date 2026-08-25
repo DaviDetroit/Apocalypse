@@ -5,6 +5,7 @@ from discord.ext import commands
 
 from config.constants import CANAL_PET
 from services.pet_service import PetService
+from services.user_service import UserService
 from cogs.pets.pet_view import PetLikeView
 
 
@@ -65,15 +66,20 @@ class Pet(commands.Cog):
 
 
             # URL definitiva do Discord CDN
-            image_url = pet_message.attachments[0].url
+            bot_image_url = pet_message.attachments[0].url
 
 
 
             # Cria registro no banco
+            await UserService.get_or_create_user(
+                discord_id=message.author.id,
+                username=message.author.name
+            )
+
             pet_id = await PetService.criar_pet(
                 discord_message_id=pet_message.id,
                 discord_author_id=message.author.id,
-                image_url=image_url
+                image_url=bot_image_url
             )
 
 
@@ -83,7 +89,7 @@ class Pet(commands.Cog):
             )
 
             embed.set_image(
-                url=image_url
+                url=bot_image_url
             )
 
 

@@ -1,5 +1,6 @@
 from database.connection import get_pool
 from config.constants import PESETAS_PET
+from services.user_service import UserService
 
 
 class PetService:
@@ -131,6 +132,10 @@ class PetService:
                     )
                 )
 
+
+                await UserService.get_or_create_user(
+                    discord_id=owner_id
+                )
 
                 # Adiciona pesetas ao dono
                 await cursor.execute(

@@ -1,5 +1,7 @@
 import discord
+
 from discord import app_commands
+
 from discord.ext import commands
 
 from database.connection import get_pool
@@ -10,11 +12,20 @@ class Pesetas(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+
     @app_commands.command(
         name="pesetas",
         description="Veja quantas Pesetas você possui."
     )
-    async def pesetas(self, interaction: discord.Interaction):
+    async def pesetas(
+        self,
+        interaction: discord.Interaction
+    ):
+
+        # Evita expirar a interação
+        await interaction.response.defer(
+            ephemeral=True
+        )
 
         pool = get_pool()
 
@@ -27,19 +38,27 @@ class Pesetas(commands.Cog):
                     FROM users
                     WHERE discord_id = %s
                     """,
-                    (str(interaction.user.id),)
+                    (
+                        str(interaction.user.id),
+                    )
                 )
 
                 result = await cursor.fetchone()
 
+
         if not result:
-            await interaction.response.send_message(
-                "<:654404secret:1540852720263626872> Você ainda não possui uma conta registrada.",
+
+            await interaction.followup.send(
+                "<:654404secret:1540852720263626872> "
+                "Você ainda não possui uma conta registrada.",
                 ephemeral=True
             )
+
             return
 
+
         points = result[0]
+
 
         embed = discord.Embed(
             title="🧟 Pesetas",
@@ -49,14 +68,20 @@ class Pesetas(commands.Cog):
             color=discord.Color.dark_red()
         )
 
+
         embed.set_footer(
             text="Economia do Licker"
         )
 
-        await interaction.response.send_message(
-            embed=embed
+
+        await interaction.followup.send(
+            embed=embed,
+            ephemeral=True
         )
 
 
 async def setup(bot):
-    await bot.add_cog(Pesetas(bot))
+
+    await bot.add_cog(
+        Pesetas(bot)
+    )
