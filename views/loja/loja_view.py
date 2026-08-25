@@ -60,8 +60,7 @@ class LojaView(View):
             name="<:1477335499277602992:1541493231538274375> Verdugo — 400 pesetas",
             value=(
                 "• Garante **2 dias** de duração do cargo\n"
-                "• Acesso ao **chat geral do Licker**\n"
-                "• Permissão para **transmitir no chat de rádio**"
+                "• Imune a cooldown nos chats"
             ),
             inline=False
         )
@@ -193,10 +192,7 @@ class CargosView(View):
 
         embed.add_field(
             name="Vantagens",
-            value=(
-                "🩸 Acesso ao **chat geral do Licker**\n"
-                "📻 Permissão para **transmitir no chat de rádio**\n"
-            ),
+            value="⏱️ Imune a cooldown nos chats",
             inline=False
         )
 
@@ -505,8 +501,7 @@ def criar_embed_loja() -> discord.Embed:
         name="<:1477335499277602992:1541493231538274375> Verdugo — 400 pesetas",
         value=(
             "• Garante **2 dias** do cargo\n"
-            "• Acesso ao **chat geral do Licker**\n"
-            "• Permissão para **transmitir no chat de rádio**"
+            "• Imune a cooldown nos chats"
         ),
         inline=False
     )
