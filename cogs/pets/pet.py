@@ -8,6 +8,8 @@ from services.pet_service import PetService
 
 from cogs.pets.pet_view import PetLikeView
 
+import asyncio
+
 
 class Pet(commands.Cog):
 
@@ -65,6 +67,7 @@ class Pet(commands.Cog):
 
             # Só apaga a mensagem original depois
             # que tudo deu certo
+            await asyncio.sleep(2)
             await message.delete()
 
         except discord.Forbidden:
