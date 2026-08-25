@@ -4,8 +4,6 @@ from discord.ext import commands
 
 from config.constants import CANAL_PET
 
-from services.pet_service import PetService
-
 from cogs.pets.pet_view import PetLikeView
 
 import asyncio
