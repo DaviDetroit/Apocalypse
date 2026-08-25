@@ -70,11 +70,27 @@ class PetLikeView(discord.ui.View):
                 result["owner_id"]
             )
 
-            await owner.send(
-                f"❤️ Seu pet recebeu um novo like!\n"
-                f"<:pesetasmediumPhotoroom:1541499172467908678> "
-                f"Você ganhou **{result['points']} pesetas**."
+            notification = discord.Embed(
+                title="Seu pet recebeu carinho! ❤️",
+                description=(
+                    f"**{interaction.user.display_name}** curtiu seu pet "
+                    "e ajudou sua coleção a brilhar um pouco mais."
+                ),
+                color=discord.Color.from_rgb(239, 83, 112)
             )
+            notification.add_field(
+                name="Recompensa recebida",
+                value=(
+                    "<:pesetasmediumPhotoroom:1541499172467908678> "
+                    f"**+{result['points']} pesetas**"
+                ),
+                inline=False
+            )
+            notification.set_footer(
+                text="Continue compartilhando momentos fofos! 🐾"
+            )
+
+            await owner.send(embed=notification)
 
         except discord.Forbidden:
             pass
