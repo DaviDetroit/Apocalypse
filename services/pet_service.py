@@ -1,147 +1,73 @@
-from database.connection import get_pool
-from config.constants import PESETAS_PET
+import discord
+
+from services.pet_service import PetService
 
 
-class PetService:
+class PetLikeView(discord.ui.View):
 
-    @staticmethod
-    async def criar_pet(
-        discord_message_id,
-        discord_author_id,
-        image_url
+    def __init__(self, discord_message_id):
+        super().__init__(timeout=None)
+        self.discord_message_id = discord_message_id
+
+
+    @discord.ui.button(
+        label="Curtir",
+        emoji="❤️",
+        style=discord.ButtonStyle.primary,
+        custom_id="pet_like"
+    )
+    async def like(
+        self,
+        interaction: discord.Interaction,
+        button: discord.ui.Button
     ):
-        pool = get_pool()
 
-        async with pool.acquire() as conn:
-            async with conn.cursor() as cursor:
+        result = await PetService.dar_like(
+            discord_message_id=self.discord_message_id,
+            discord_user_id=interaction.user.id
+        )
 
-                await cursor.execute(
-                    """
-                    INSERT INTO pets (
-                        discord_message_id,
-                        discord_author_id,
-                        image_url
-                    )
-                    VALUES (%s, %s, %s)
-                    """,
-                    (
-                        discord_message_id,
-                        discord_author_id,
-                        image_url
-                    )
+
+        if not result["success"]:
+
+            if result["error"] == "already_liked":
+                await interaction.response.send_message(
+                    "❌ Você já curtiu esse pet.",
+                    ephemeral=True
                 )
+                return
 
-                await conn.commit()
-
-
-    @staticmethod
-    async def dar_like(
-        discord_message_id,
-        discord_user_id
-    ):
-        pool = get_pool()
-
-        async with pool.acquire() as conn:
-            async with conn.cursor() as cursor:
-
-                # Busca o pet pela mensagem do Discord
-                await cursor.execute(
-                    """
-                    SELECT id, discord_author_id
-                    FROM pets
-                    WHERE discord_message_id = %s
-                    AND is_active = 1
-                    """,
-                    (discord_message_id,)
+            if result["error"] == "pet_not_found":
+                await interaction.response.send_message(
+                    "❌ Esse pet não existe mais.",
+                    ephemeral=True
                 )
-
-                pet = await cursor.fetchone()
-
-                if not pet:
-                    return {
-                        "success": False,
-                        "error": "pet_not_found"
-                    }
+                return
 
 
-                pet_id = pet[0]
-                owner_id = pet[1]
+            await interaction.response.send_message(
+                "❌ Não foi possível registrar o like.",
+                ephemeral=True
+            )
+            return
 
 
-                # Verifica se já curtiu
-                await cursor.execute(
-                    """
-                    SELECT id
-                    FROM pet_likes
-                    WHERE pet_id = %s
-                    AND discord_user_id = %s
-                    """,
-                    (
-                        pet_id,
-                        discord_user_id
-                    )
-                )
-
-                already_liked = await cursor.fetchone()
-
-                if already_liked:
-                    return {
-                        "success": False,
-                        "error": "already_liked"
-                    }
+        await interaction.response.send_message(
+            f"❤️ Like registrado!\n"
+            f"Você deu **+{result['reward']} pesetas** para o dono do pet.",
+            ephemeral=True
+        )
 
 
-                # Registra o like
-                await cursor.execute(
-                    """
-                    INSERT INTO pet_likes (
-                        pet_id,
-                        discord_user_id
-                    )
-                    VALUES (%s, %s)
-                    """,
-                    (
-                        pet_id,
-                        discord_user_id
-                    )
-                )
+        try:
+            user = await interaction.client.fetch_user(
+                result["owner_id"]
+            )
 
+            await user.send(
+                f"❤️ **{interaction.user.name}** deu like no seu pet!\n"
+                f"Você ganhou **{result['reward']} pesetas**."
+            )
 
-                # Atualiza contador do pet
-                await cursor.execute(
-                    """
-                    UPDATE pets
-                    SET
-                        likes_count = likes_count + 1,
-                        pesetas_received = pesetas_received + %s
-                    WHERE id = %s
-                    """,
-                    (
-                        PESETAS_PET,
-                        pet_id
-                    )
-                )
-
-
-                # Dá as pesetas para o dono
-                await cursor.execute(
-                    """
-                    UPDATE users
-                    SET points = points + %s
-                    WHERE discord_id = %s
-                    """,
-                    (
-                        PESETAS_PET,
-                        owner_id
-                    )
-                )
-
-
-                await conn.commit()
-
-
-                return {
-                    "success": True,
-                    "owner_id": owner_id,
-                    "reward": PESETAS_PET
-                }
+        except discord.Forbidden:
+            pass
