@@ -14,55 +14,75 @@ class Pet(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):
 
+        # Ignora mensagens do próprio bot
         if message.author.bot:
             return
 
+        # Só funciona no canal de pets
         if message.channel.id != CANAL_PET:
             return
 
+        # Precisa ter pelo menos um anexo
         if not message.attachments:
             return
 
         attachment = message.attachments[0]
 
+        # Só aceita imagens
         if not (attachment.content_type or "").startswith("image/"):
             return
 
-        # Baixa a imagem do Discord
-        image = await attachment.to_file(
-            filename=attachment.filename
-        )
+        # Guarda a URL da imagem original
+        image_url = attachment.url
 
-        embed = discord.Embed(
-            title=f"🐾 Pet de {message.author.name}"
-        )
+        try:
+            # Cria o embed
+            embed = discord.Embed(
+                title=f"🐾 Pet de {message.author.name}"
+            )
 
-        # A imagem será anexada na mensagem do bot
-        embed.set_image(
-            url=f"attachment://{attachment.filename}"
-        )
+            embed.set_image(url=image_url)
 
-        # Envia a nova mensagem
-        pet_message = await message.channel.send(
-            embed=embed,
-            file=image,
-            view=PetLikeView()
-        )
+            # Envia a mensagem do bot
+            pet_message = await message.channel.send(
+                embed=embed
+            )
 
-        image_url = pet_message.attachments[0].url
+            # Salva o pet no banco
+            await PetService.criar_pet(
+                discord_message_id=pet_message.id,
+                discord_author_id=message.author.id,
+                image_url=image_url
+            )
 
-        await PetService.criar_pet(
-            pet_message.id,
-            message.author.id,
-            image_url
-        )
+            # Adiciona o botão de Curtir
+            await pet_message.edit(
+                view=PetLikeView(pet_message.id)
+            )
 
-        # Apaga a mensagem original
-        await message.delete()
+            # Só apaga a mensagem original depois
+            # que tudo deu certo
+            await message.delete()
+
+        except discord.Forbidden:
+            print(
+                f"Sem permissão para processar o pet "
+                f"da mensagem {message.id}"
+            )
+
+        except discord.HTTPException as error:
+            print(
+                f"Erro do Discord ao processar o pet "
+                f"{message.id}: {error}"
+            )
+
+        except Exception as error:
+            print(
+                f"Erro ao processar o pet {message.id}: {error}"
+            )
 
 
 async def setup(bot: commands.Bot):
