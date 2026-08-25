@@ -1,6 +1,10 @@
 import discord
 
 from services.pet_service import PetService
+from utils.logger import setup_logger
+
+
+logger = setup_logger()
 
 
 class PetLikeView(discord.ui.View):
@@ -58,6 +62,15 @@ class PetLikeView(discord.ui.View):
 
 
         # Resposta para quem deu like
+        logger.info(
+            "Like recebido: %s (%s) deu %s pesetas para o dono=%s do pet=%s",
+            interaction.user.display_name,
+            interaction.user.id,
+            result["points"],
+            result["owner_id"],
+            self.pet_id
+        )
+
         await interaction.response.send_message(
             "❤️ Voto registrado! Obrigado por curtir este pet.",
             ephemeral=True

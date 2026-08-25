@@ -1,6 +1,10 @@
 from database.connection import get_pool
 from config.constants import PESETAS_PET
 from services.user_service import UserService
+from utils.logger import setup_logger
+
+
+logger = setup_logger()
 
 
 class PetService:
@@ -33,6 +37,13 @@ class PetService:
                 )
 
                 await conn.commit()
+
+                logger.info(
+                    "Pet criado: autor=%s, mensagem=%s, pet=%s",
+                    discord_author_id,
+                    discord_message_id,
+                    cursor.lastrowid
+                )
 
                 return cursor.lastrowid
 
@@ -150,8 +161,16 @@ class PetService:
                     )
                 )
 
-
                 await conn.commit()
+
+                logger.info(
+                    "Like registrado: usuario=%s deu %s pesetas "
+                    "para o dono=%s do pet=%s",
+                    discord_user_id,
+                    PESETAS_PET,
+                    owner_id,
+                    pet_id
+                )
 
 
                 return {

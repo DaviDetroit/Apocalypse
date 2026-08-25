@@ -3,6 +3,10 @@ from discord import app_commands
 from discord.ext import commands
 
 from services.economy_service import EconomyService
+from utils.logger import setup_logger
+
+
+logger = setup_logger()
 
 
 class TransferirPesetas(commands.Cog):
@@ -76,6 +80,15 @@ class TransferirPesetas(commands.Cog):
                 ephemeral=True
             )
             return
+
+        logger.info(
+            "Transferência realizada: %s (%s) enviou %s pesetas para %s (%s)",
+            interaction.user.display_name,
+            interaction.user.id,
+            result["amount"],
+            usuario.display_name,
+            usuario.id
+        )
 
         embed = discord.Embed(
             title=(
