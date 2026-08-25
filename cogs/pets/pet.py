@@ -67,7 +67,7 @@ class Pet(commands.Cog):
 
             # Só apaga a mensagem original depois
             # que tudo deu certo
-            await asyncio.sleep(5)
+            await asyncio.sleep(10)
             await message.delete()
 
         except discord.Forbidden:
