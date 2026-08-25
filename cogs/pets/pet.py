@@ -1,12 +1,12 @@
+import asyncio
+
 import discord
 
 from discord.ext import commands
 
 from config.constants import CANAL_PET
-
+from services.pet_service import PetService
 from cogs.pets.pet_view import PetLikeView
-
-import asyncio
 
 
 class Pet(commands.Cog):
@@ -25,59 +25,55 @@ class Pet(commands.Cog):
         if message.channel.id != CANAL_PET:
             return
 
-        # Precisa ter pelo menos um anexo
+        # Precisa ter imagem
         if not message.attachments:
             return
 
         attachment = message.attachments[0]
 
-        # Só aceita imagens
+        # Aceita apenas imagens
         if not (attachment.content_type or "").startswith("image/"):
             return
 
-        # Guarda a URL da imagem original
         image_url = attachment.url
 
         try:
-            # Cria o embed
             embed = discord.Embed(
                 title=f"🐾 Pet de {message.author.name}"
             )
 
             embed.set_image(url=image_url)
 
-            # Envia a mensagem do bot
+            # Envia a imagem do bot
             pet_message = await message.channel.send(
                 embed=embed
             )
 
-            # Salva o pet no banco
-            await PetService.criar_pet(
+            # Salva no banco e pega ID do pet
+            pet_id = await PetService.criar_pet(
                 discord_message_id=pet_message.id,
                 discord_author_id=message.author.id,
                 image_url=image_url
             )
 
-            # Adiciona o botão de Curtir
+            # Coloca botão usando ID correto do banco
             await pet_message.edit(
-                view=PetLikeView(pet_message.id)
+                view=PetLikeView(pet_id)
             )
 
-            # Só apaga a mensagem original depois
-            # que tudo deu certo
-            await asyncio.sleep(10)
+            # Aguarda antes de apagar original
+            await asyncio.sleep(2)
+
             await message.delete()
 
         except discord.Forbidden:
             print(
-                f"Sem permissão para processar o pet "
-                f"da mensagem {message.id}"
+                f"Sem permissão para processar o pet {message.id}"
             )
 
         except discord.HTTPException as error:
             print(
-                f"Erro do Discord ao processar o pet "
-                f"{message.id}: {error}"
+                f"Erro Discord ao processar pet {message.id}: {error}"
             )
 
         except Exception as error:
