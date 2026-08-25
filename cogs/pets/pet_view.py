@@ -7,7 +7,6 @@ class PetLikeView(discord.ui.View):
 
     def __init__(self, pet_id: int):
         super().__init__(timeout=None)
-
         self.pet_id = pet_id
 
     @discord.ui.button(
@@ -21,6 +20,7 @@ class PetLikeView(discord.ui.View):
         interaction: discord.Interaction,
         button: discord.ui.Button
     ):
+
         result = await PetService.dar_like(
             pet_id=self.pet_id,
             discord_user_id=interaction.user.id
@@ -30,7 +30,8 @@ class PetLikeView(discord.ui.View):
 
             if result["error"] == "own_pet":
                 await interaction.response.send_message(
-                    "❌ Você não pode dar like no próprio pet.",
+                    "<:whiskers:1541503209565200445> "
+                    "Você não pode dar like no próprio pet.",
                     ephemeral=True
                 )
                 return
@@ -55,8 +56,25 @@ class PetLikeView(discord.ui.View):
             )
             return
 
+
+        # Resposta para quem deu like
         await interaction.response.send_message(
-            f"❤️ Você curtiu este pet!\n"
-            f"<:pesetasmediumPhotoroom:1541499172467908678> Você ganhou **{result['points']} pesetas**.",
+            "❤️ Voto registrado! Obrigado por curtir este pet.",
             ephemeral=True
         )
+
+
+        # Aviso para o dono do pet
+        try:
+            owner = await interaction.client.fetch_user(
+                result["owner_id"]
+            )
+
+            await owner.send(
+                f"❤️ Seu pet recebeu um novo like!\n"
+                f"<:pesetasmediumPhotoroom:1541499172467908678> "
+                f"Você ganhou **{result['points']} pesetas**."
+            )
+
+        except discord.Forbidden:
+            pass
