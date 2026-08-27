@@ -8,11 +8,31 @@ class UserService:
         discord_id: int,
         username: str = None
     ):
-
         pool = get_pool()
 
         async with pool.acquire() as conn:
             async with conn.cursor() as cursor:
+
+                await cursor.execute(
+                    """
+                    INSERT INTO users (
+                        discord_id,
+                        username
+                    )
+                    VALUES (%s, %s)
+                    ON DUPLICATE KEY UPDATE
+                        username = COALESCE(
+                            VALUES(username),
+                            username
+                        )
+                    """,
+                    (
+                        str(discord_id),
+                        username
+                    )
+                )
+
+                await conn.commit()
 
                 await cursor.execute(
                     """
@@ -27,24 +47,4 @@ class UserService:
 
                 user = await cursor.fetchone()
 
-                if user:
-                    return user[0]
-
-
-                await cursor.execute(
-                    """
-                    INSERT INTO users (
-                        discord_id,
-                        username
-                    )
-                    VALUES (%s, %s)
-                    """,
-                    (
-                        str(discord_id),
-                        username
-                    )
-                )
-
-                await conn.commit()
-
-                return cursor.lastrowid
+                return user[0]
