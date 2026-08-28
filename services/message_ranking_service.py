@@ -1,9 +1,20 @@
-from database.connection import get_pool
+from datetime import date, timedelta
 
+from database.connection import get_pool
 from config.constants import REWARDS_WEEK
 
 
 class MessageRankingService:
+
+    @staticmethod
+    def get_week_reference():
+
+        today = date.today()
+
+        # Domingo = 6
+        days_since_sunday = (today.weekday() + 1) % 7
+
+        return today - timedelta(days=days_since_sunday)
 
     @staticmethod
     async def get_weekly_ranking():
@@ -29,7 +40,9 @@ class MessageRankingService:
     @staticmethod
     async def reward_ranking():
 
-        ranking = await MessageRankingService.get_weekly_ranking()
+        week_reference = (
+            MessageRankingService.get_week_reference()
+        )
 
         pool = get_pool()
 
@@ -38,13 +51,72 @@ class MessageRankingService:
         async with pool.acquire() as conn:
             async with conn.cursor() as cursor:
 
-                for position, row in enumerate(ranking, start=1):
+                # Verifica se esta semana já foi premiada
+                await cursor.execute(
+                    """
+                    SELECT id
+                    FROM weekly_message_reward_runs
+                    WHERE week_reference = %s
+                    """,
+                    (
+                        week_reference,
+                    )
+                )
+
+                already_rewarded = await cursor.fetchone()
+
+                if already_rewarded:
+                    return {
+                        "success": False,
+                        "error": "already_rewarded"
+                    }
+
+                # Busca o ranking
+                await cursor.execute(
+                    """
+                    CALL sp_get_weekly_message_ranking()
+                    """
+                )
+
+                ranking = await cursor.fetchall()
+
+                while await cursor.nextset():
+                    pass
+
+                if not ranking:
+                    return {
+                        "success": False,
+                        "error": "empty_ranking"
+                    }
+
+                # Registra a execução antes da premiação
+                await cursor.execute(
+                    """
+                    INSERT INTO weekly_message_reward_runs (
+                        week_reference
+                    )
+                    VALUES (%s)
+                    """,
+                    (
+                        week_reference,
+                    )
+                )
+
+                # Premia o Top 5
+                for position, row in enumerate(
+                    ranking,
+                    start=1
+                ):
 
                     discord_author_id = row[0]
                     total_messages = row[1]
 
-                    reward = REWARDS_WEEK.get(position, 0)
+                    reward = REWARDS_WEEK.get(
+                        position,
+                        0
+                    )
 
+                    # Adiciona as pesetas
                     await cursor.execute(
                         """
                         UPDATE users
@@ -57,6 +129,7 @@ class MessageRankingService:
                         )
                     )
 
+                    # Salva histórico da premiação
                     await cursor.execute(
                         """
                         INSERT INTO weekly_message_rewards (
@@ -84,4 +157,8 @@ class MessageRankingService:
 
                 await conn.commit()
 
-        return results
+        return {
+            "success": True,
+            "week_reference": week_reference,
+            "ranking": results
+        }

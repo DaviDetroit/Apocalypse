@@ -27,7 +27,22 @@ class MessageRanking(commands.Cog):
 
         await interaction.response.defer()
 
-        ranking = await MessageRankingService.reward_ranking()
+        result = await MessageRankingService.reward_ranking()
+        if not result["success"]:
+
+            if result["error"] == "already_rewarded":
+                await interaction.followup.send(
+                    "⚠️ O ranking desta semana já foi premiado."
+                )
+                return
+
+            if result["error"] == "empty_ranking":
+                await interaction.followup.send(
+                    "❌ Nenhuma mensagem encontrada no ranking."
+                )
+                return
+
+        ranking = result["ranking"]
 
         if not ranking:
 
@@ -57,7 +72,7 @@ class MessageRanking(commands.Cog):
                 f"{medals[item['position']]} "
                 f"<@{item['discord_id']}> • "
                 f"{item['messages']} mensagens • "
-                f"+{item['reward']} pesetas"
+                f"+{item['reward']} <:pesetasmediumPhotoroom:1541499172467908678>"
             )
 
         embed.description = "\n".join(description)
