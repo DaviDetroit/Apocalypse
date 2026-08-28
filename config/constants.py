@@ -17,3 +17,10 @@ PESETAS_PET = 7
 CANAL_PET = 1431988294375440435
 EMOJI_PET = "🐾"
 
+REWARDS_WEEK = {
+    1: 120,
+    2: 80,
+    3: 50,
+    4: 30,
+    5: 20
+}
