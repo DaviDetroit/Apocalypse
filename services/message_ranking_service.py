@@ -2,10 +2,12 @@ from database.connection import get_pool
 
 from config.constants import REWARDS_WEEK
 
+
 class MessageRankingService:
 
     @staticmethod
     async def get_weekly_ranking():
+
         pool = get_pool()
 
         async with pool.acquire() as conn:
@@ -31,7 +33,7 @@ class MessageRankingService:
 
         pool = get_pool()
 
-        results  = []
+        results = []
 
         async with pool.acquire() as conn:
             async with conn.cursor() as cursor:
@@ -54,6 +56,7 @@ class MessageRankingService:
                             str(discord_author_id)
                         )
                     )
+
                     await cursor.execute(
                         """
                         INSERT INTO weekly_message_rewards (
@@ -64,13 +67,14 @@ class MessageRankingService:
                         )
                         VALUES (%s, %s, %s, %s)
                         """,
-                    (
-                        str(discord_author_id),
-                        position,
-                        total_messages,
-                        reward
+                        (
+                            str(discord_author_id),
+                            position,
+                            total_messages,
+                            reward
+                        )
                     )
-                )
+
                     results.append({
                         "position": position,
                         "discord_id": discord_author_id,
@@ -78,8 +82,6 @@ class MessageRankingService:
                         "reward": reward
                     })
 
-                    await conn.commit()
+                await conn.commit()
 
-                return results
-
-
+        return results
