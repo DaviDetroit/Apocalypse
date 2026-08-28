@@ -6,7 +6,7 @@ class MessageRankingService:
 
     @staticmethod
     async def get_weekly_ranking():
-        pool = get_pool
+        pool = get_pool()
 
         async with pool.acquire() as conn:
             async with conn.cursor() as cursor:
