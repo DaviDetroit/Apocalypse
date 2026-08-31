@@ -1,7 +1,12 @@
+import math
 from datetime import date, timedelta
 
 from database.connection import get_pool
-from config.constants import REWARDS_WEEK
+from config.constants import (
+    BASE_REWARDS,
+    MAX_REWARDS
+)
+
 
 
 class MessageRankingService:
@@ -51,7 +56,6 @@ class MessageRankingService:
         async with pool.acquire() as conn:
             async with conn.cursor() as cursor:
 
-                # Verifica se esta semana já foi premiada
                 await cursor.execute(
                     """
                     SELECT id
@@ -72,16 +76,7 @@ class MessageRankingService:
                     }
 
                 # Busca o ranking
-                await cursor.execute(
-                    """
-                    CALL sp_get_weekly_message_ranking()
-                    """
-                )
-
-                ranking = await cursor.fetchall()
-
-                while await cursor.nextset():
-                    pass
+                ranking = await MessageRankingService.get_weekly_ranking()
 
                 if not ranking:
                     return {
@@ -111,9 +106,21 @@ class MessageRankingService:
                     discord_author_id = row[0]
                     total_messages = row[1]
 
-                    reward = REWARDS_WEEK.get(
+                    base_reward = BASE_REWARDS.get(
                         position,
                         0
+                    )
+
+                    max_reward = MAX_REWARDS.get(
+                        position,
+                        base_reward
+                    )
+
+                    reward = min(
+                        max_reward,
+                        base_reward + int(
+                            math.sqrt(total_messages) * 2
+                        )
                     )
 
                     # Adiciona as pesetas
@@ -129,7 +136,6 @@ class MessageRankingService:
                         )
                     )
 
-                    # Salva histórico da premiação
                     await cursor.execute(
                         """
                         INSERT INTO weekly_message_rewards (
