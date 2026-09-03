@@ -148,9 +148,10 @@ async def count_daily_evaluations(
 
 
 async def get_monthly_top_evaluations(
+    year: int,
+    month: int,
     limit: int = 3,
 ):
-
     pool = get_pool()
 
     async with pool.acquire() as connection:
@@ -159,12 +160,25 @@ async def get_monthly_top_evaluations(
             await cursor.execute(
                 """
                 SELECT
-                    discord_id,
-                    total
-                FROM monthly_evaluation_ranking
+                    u.discord_id,
+                    COUNT(e.id) AS total
+                FROM evaluations e
+                JOIN users u
+                    ON u.id = e.author_id
+                WHERE
+                    YEAR(e.created_at) = %s
+                    AND MONTH(e.created_at) = %s
+                GROUP BY
+                    u.id,
+                    u.discord_id
+                ORDER BY
+                    total DESC,
+                    u.id ASC
                 LIMIT %s
                 """,
                 (
+                    year,
+                    month,
                     limit,
                 ),
             )
